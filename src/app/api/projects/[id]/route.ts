@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { parseJsonField } from "@/lib/utils";
+import { assertProjectAccess, assertProjectWriteAccess } from "@/lib/demo/access";
 
 export async function GET(
   request: NextRequest,
@@ -8,6 +9,9 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+    const access = await assertProjectAccess(request, id);
+    if (!access.allowed) return access.response;
+
     const project = await prisma.project.findUnique({
       where: { id },
       include: {
@@ -36,10 +40,7 @@ export async function GET(
     });
   } catch (error) {
     console.error("Failed to get project:", error instanceof Error ? error.name : "unknown");
-    return NextResponse.json(
-      { error: "Failed to get project" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to get project" }, { status: 500 });
   }
 }
 
@@ -49,13 +50,13 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
+    const access = await assertProjectWriteAccess(request, id);
+    if (!access.allowed) return access.response;
+
     await prisma.project.delete({ where: { id } });
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Failed to delete project:", error instanceof Error ? error.name : "unknown");
-    return NextResponse.json(
-      { error: "Failed to delete project" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to delete project" }, { status: 500 });
   }
 }

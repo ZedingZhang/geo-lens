@@ -1,4 +1,27 @@
 services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://geo_lens:geo_lens_password@postgres:5432/geo_lens
+      - DIRECT_URL=postgresql://geo_lens:geo_lens_password@postgres:5432/geo_lens
+      - DEMO_MODE=true
+      - CRON_SECRET=${CRON_SECRET:-dev_secret_change_in_production}
+      - LLM_API_KEY=${LLM_API_KEY:-}
+      - LLM_BASE_URL=${LLM_BASE_URL:-https://api.deepseek.com}
+      - LLM_MODEL=${LLM_MODEL:-deepseek-v4-flash}
+      - LLM_TIMEOUT_MS=${LLM_TIMEOUT_MS:-30000}
+      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+      - RATE_LIMIT_PER_HOUR=${RATE_LIMIT_PER_HOUR:-20}
+      - MAX_INPUT_CHARS=${MAX_INPUT_CHARS:-2000}
+      - MAX_PROJECTS_PER_DEMO_SESSION=${MAX_PROJECTS_PER_DEMO_SESSION:-5}
+      - DEMO_DATA_RETENTION_DAYS=${DEMO_DATA_RETENTION_DAYS:-7}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
   postgres:
     image: postgres:16-alpine
     environment:

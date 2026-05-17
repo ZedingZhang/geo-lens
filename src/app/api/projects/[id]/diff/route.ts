@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { withRateLimit } from "@/lib/security/rate-limit";
+import { enforceRateLimit } from "@/lib/security/rate-limit";
+import { assertProjectWriteAccess } from "@/lib/demo/access";
 import { callLLM } from "@/lib/llm/client";
 import { ContentDiffSchema } from "@/lib/llm/schemas";
 import { buildDiffPrompt } from "@/lib/llm/prompts";
@@ -9,15 +10,14 @@ import { MOCK_DIFF } from "@/lib/mock-data";
 export async function POST(request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const rateLimitResponse = withRateLimit(request);
+  const rateLimitResponse = await enforceRateLimit(request, "diff");
   if (rateLimitResponse) return rateLimitResponse;
 
   try {
     const { id } = await params;
-    const project = await prisma.project.findUnique({ where: { id } });
-    if (!project) {
-      return NextResponse.json({ error: "Project not found" }, { status: 404 });
-    }
+    const access = await assertProjectWriteAccess(request, id);
+    if (!access.allowed) return access.response;
+    const project = access.project as typeof access.project & { description: string };
 
     const body = await request.json().catch(() => ({}));
     const originalContent = body.content || project.description;

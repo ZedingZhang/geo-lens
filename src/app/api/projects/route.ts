@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { withRateLimit, getClientIP, hashIP } from "@/lib/security/rate-limit";
+import { enforceRateLimit } from "@/lib/security/rate-limit";
 import { getEnv } from "@/lib/env";
 import { z } from "zod";
-import { canCreateProject, getExpiresAt, generateSessionHash } from "@/lib/demo/session";
+import {
+  canCreateProject,
+  getExpiresAt,
+  getSessionWhereClause,
+  getOrCreateDemoSessionFromRequest,
+  getDemoCookieOptions,
+} from "@/lib/demo/session";
 
 const createProjectSchema = z.object({
   name: z.string().min(1).max(100),
@@ -17,17 +23,15 @@ const createProjectSchema = z.object({
 });
 
 export async function GET(request: NextRequest) {
-  const rateLimitResponse = withRateLimit(request);
-  if (rateLimitResponse) return rateLimitResponse;
-
   try {
     const isDemo = getEnv().DEMO_MODE;
-    const sessionHash = isDemo ? request.cookies.get("geo_lens_demo_session")?.value : undefined;
+    const { sessionHash, shouldSetCookie } =
+      await getOrCreateDemoSessionFromRequest(request);
 
     const projects = await prisma.project.findMany({
-      where: sessionHash
-        ? { demoSessionHash: sessionHash }
-        : { isSample: false },
+      where: isDemo
+        ? { OR: [{ demoSessionHash: sessionHash }, { isSample: true }] }
+        : {},
       orderBy: { updatedAt: "desc" },
       take: 50,
       include: {
@@ -35,7 +39,18 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({ projects });
+    const res = NextResponse.json({ projects });
+    if (shouldSetCookie) {
+      const opts = getDemoCookieOptions(sessionHash);
+      res.cookies.set(opts.name, opts.value, {
+        httpOnly: opts.httpOnly,
+        secure: opts.secure,
+        sameSite: opts.sameSite,
+        maxAge: opts.maxAge,
+        path: opts.path,
+      });
+    }
+    return res;
   } catch (error) {
     console.error("Failed to list projects:", error instanceof Error ? error.name : "unknown");
     return NextResponse.json(
@@ -46,7 +61,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const rateLimitResponse = withRateLimit(request);
+  const rateLimitResponse = await enforceRateLimit(request, "create_project");
   if (rateLimitResponse) return rateLimitResponse;
 
   try {
@@ -64,7 +79,9 @@ export async function POST(request: NextRequest) {
     let demoSessionHash: string | null = null;
 
     if (isDemo) {
-      demoSessionHash = request.cookies.get("geo_lens_demo_session")?.value || generateSessionHash();
+      const { sessionHash, shouldSetCookie } =
+        await getOrCreateDemoSessionFromRequest(request);
+      demoSessionHash = sessionHash;
 
       const canCreate = await canCreateProject(demoSessionHash);
       if (!canCreate) {
@@ -92,7 +109,21 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({ project }, { status: 201 });
+    const res = NextResponse.json({ project }, { status: 201 });
+
+    // Set session cookie on response
+    if (isDemo && demoSessionHash) {
+      const opts = getDemoCookieOptions(demoSessionHash);
+      res.cookies.set(opts.name, opts.value, {
+        httpOnly: opts.httpOnly,
+        secure: opts.secure,
+        sameSite: opts.sameSite,
+        maxAge: opts.maxAge,
+        path: opts.path,
+      });
+    }
+
+    return res;
   } catch (error) {
     console.error("Failed to create project:", error instanceof Error ? error.name : "unknown");
     return NextResponse.json(

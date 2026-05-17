@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { withRateLimit } from "@/lib/security/rate-limit";
+import { enforceRateLimit } from "@/lib/security/rate-limit";
+import { assertProjectWriteAccess } from "@/lib/demo/access";
 import { callLLM } from "@/lib/llm/client";
 import { GeoAnalysisSchema } from "@/lib/llm/schemas";
 import { buildGeoAnalysisPrompt } from "@/lib/llm/prompts";
@@ -11,15 +12,17 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const rateLimitResponse = withRateLimit(request);
+  const rateLimitResponse = await enforceRateLimit(request, "analyze");
   if (rateLimitResponse) return rateLimitResponse;
 
   try {
     const { id } = await params;
-    const project = await prisma.project.findUnique({ where: { id } });
-    if (!project) {
-      return NextResponse.json({ error: "Project not found" }, { status: 404 });
-    }
+    const access = await assertProjectWriteAccess(request, id);
+    if (!access.allowed) return access.response;
+    const project = access.project as typeof access.project & {
+      name: string; brandName: string; description: string; audience: string;
+      product: string; keywords: string; competitors: string | null;
+    };
 
     const keywords = parseJsonField<string[]>(project.keywords, []);
     const competitors = parseJsonField<string[]>(project.competitors || null, []);

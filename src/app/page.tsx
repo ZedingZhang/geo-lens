@@ -1,44 +1,44 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { prisma } from "@/lib/db";
 import { formatDate } from "@/lib/utils";
-import {
-  PlusCircle,
-  Sparkles,
-  FolderOpen,
-  ArrowRight,
-} from "lucide-react";
+import { PlusCircle, Sparkles, FolderOpen, ArrowRight, Loader2 } from "lucide-react";
+import { scoreToColor } from "@/lib/geo/scoring";
 
-export default async function HomePage() {
-  let projects: Array<{
-    id: string;
-    name: string;
-    brandName: string;
-    updatedAt: Date;
-    isSample: boolean;
-    analyses: Array<{ totalScore: number }>;
-  }> = [];
+interface ProjectItem {
+  id: string;
+  name: string;
+  brandName: string;
+  updatedAt: string;
+  isSample: boolean;
+  analyses: Array<{ totalScore: number }>;
+}
 
-  try {
-    projects = await prisma.project.findMany({
-      orderBy: { updatedAt: "desc" },
-      take: 10,
-      include: {
-        analyses: { orderBy: { createdAt: "desc" }, take: 1 },
-      },
-    });
-  } catch {
-    // Database may not be available
-  }
+export default function HomePage() {
+  const [projects, setProjects] = useState<ProjectItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  let avgScore = "—";
-  if (projects.length > 0) {
-    const scores = projects
-      .map((p) => p.analyses[0]?.totalScore)
-      .filter(Boolean) as number[];
-    if (scores.length > 0) {
-      avgScore = String(Math.round(scores.reduce((s, v) => s + v, 0) / scores.length));
-    }
-  }
+  useEffect(() => {
+    fetch("/api/projects")
+      .then((r) => r.json())
+      .then((d) => setProjects(d.projects || []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const avgScore =
+    projects.length > 0
+      ? String(
+          Math.round(
+            projects
+              .map((p) => p.analyses[0]?.totalScore)
+              .filter(Boolean)
+              .reduce((s, v) => s + v!, 0) /
+              projects.filter((p) => p.analyses[0]).length
+          )
+        )
+      : "—";
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
@@ -65,7 +65,7 @@ export default async function HomePage() {
               <FolderOpen className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
-              <div className="text-2xl font-bold">{projects.length}</div>
+              <div className="text-2xl font-bold">{loading ? "—" : projects.length}</div>
               <div className="text-xs text-[var(--muted-foreground)]">Projects</div>
             </div>
           </div>
@@ -76,7 +76,7 @@ export default async function HomePage() {
               <Sparkles className="h-5 w-5 text-purple-600 dark:text-purple-400" />
             </div>
             <div>
-              <div className="text-2xl font-bold">{avgScore}</div>
+              <div className="text-2xl font-bold">{loading ? "—" : avgScore}</div>
               <div className="text-xs text-[var(--muted-foreground)]">Avg GEO Score</div>
             </div>
           </div>
@@ -100,7 +100,11 @@ export default async function HomePage() {
 
       <div className="mb-6">
         <h2 className="text-lg font-semibold mb-3">Recent Projects</h2>
-        {projects.length === 0 ? (
+        {loading ? (
+          <div className="card p-12 text-center">
+            <Loader2 className="h-6 w-6 animate-spin mx-auto" />
+          </div>
+        ) : projects.length === 0 ? (
           <div className="card p-12 text-center">
             <div className="text-[var(--muted-foreground)] mb-4">
               No projects yet. Create your first GEO analysis project.
@@ -137,14 +141,7 @@ export default async function HomePage() {
                     <div className="text-right">
                       <div
                         className="text-xl font-bold"
-                        style={{
-                          color:
-                            project.analyses[0].totalScore >= 80
-                              ? "#22c55e"
-                              : project.analyses[0].totalScore >= 60
-                              ? "#eab308"
-                              : "#ef4444",
-                        }}
+                        style={{ color: scoreToColor(project.analyses[0].totalScore) }}
                       >
                         {project.analyses[0].totalScore}
                       </div>

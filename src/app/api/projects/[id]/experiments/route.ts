@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { parseJsonField } from "@/lib/utils";
 import { computeDelta } from "@/lib/geo/experiments";
+import { enforceRateLimit } from "@/lib/security/rate-limit";
+import { assertProjectAccess, assertProjectWriteAccess } from "@/lib/demo/access";
 import { z } from "zod";
 
 const createExperimentSchema = z.object({
@@ -16,8 +18,14 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const rateLimitResponse = await enforceRateLimit(request, "experiments");
+  if (rateLimitResponse) return rateLimitResponse;
+
   try {
     const { id } = await params;
+    const access = await assertProjectWriteAccess(request, id);
+    if (!access.allowed) return access.response;
+
     const body = await request.json();
     const parsed = createExperimentSchema.safeParse(body);
 
@@ -56,6 +64,9 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+    const access = await assertProjectAccess(request, id);
+    if (!access.allowed) return access.response;
+
     const experiments = await prisma.geoExperiment.findMany({
       where: { projectId: id },
       orderBy: { createdAt: "desc" },

@@ -1,37 +1,39 @@
-const BLOCKED_HOSTS = [
+import { lookup } from "node:dns/promises";
+
+const BLOCKED_HOSTNAMES = new Set([
   "localhost",
   "127.0.0.1",
   "0.0.0.0",
   "::1",
   "169.254.169.254",
   "metadata.google.internal",
+]);
+
+const PRIVATE_IP_PREFIXES = [
+  "10.",
+  "172.16.", "172.17.", "172.18.", "172.19.",
+  "172.20.", "172.21.", "172.22.", "172.23.",
+  "172.24.", "172.25.", "172.26.", "172.27.",
+  "172.28.", "172.29.", "172.30.", "172.31.",
+  "192.168.",
+  "127.",
+  "0.",
 ];
 
-const BLOCKED_PREFIXES = [
-  "10.",
-  "172.16.",
-  "172.17.",
-  "172.18.",
-  "172.19.",
-  "172.20.",
-  "172.21.",
-  "172.22.",
-  "172.23.",
-  "172.24.",
-  "172.25.",
-  "172.26.",
-  "172.27.",
-  "172.28.",
-  "172.29.",
-  "172.30.",
-  "172.31.",
-  "192.168.",
-];
+function isPrivateIP(ip: string): boolean {
+  if (ip === "::1" || ip === "169.254.169.254") return true;
+  if (ip.startsWith("fe80:")) return true;
+  for (const prefix of PRIVATE_IP_PREFIXES) {
+    if (ip.startsWith(prefix)) return true;
+  }
+  if (ip.match(/^169\.254\./)) return true;
+  return false;
+}
 
 export class SafeFetchError extends Error {
   constructor(
     message: string,
-    public code: "invalid_url" | "blocked" | "timeout" | "fetch_failed"
+    public code: "invalid_url" | "blocked" | "dns_blocked" | "timeout" | "fetch_failed" | "redirect_blocked"
   ) {
     super(message);
     this.name = "SafeFetchError";
@@ -47,33 +49,39 @@ export function isValidUrl(urlString: string): boolean {
   }
 }
 
-export function isBlockedUrl(urlString: string): { blocked: boolean; reason?: string } {
+function validateUrl(urlString: string): URL {
+  if (!isValidUrl(urlString)) {
+    throw new SafeFetchError("Invalid URL", "invalid_url");
+  }
+  const url = new URL(urlString);
+  if (url.protocol !== "http:" && url.protocol !== "https:") {
+    throw new SafeFetchError(`Protocol ${url.protocol} not allowed`, "blocked");
+  }
+  const hostname = url.hostname.toLowerCase();
+  if (BLOCKED_HOSTNAMES.has(hostname)) {
+    throw new SafeFetchError(`Host ${hostname} is blocked`, "blocked");
+  }
+  // Check hostname directly for IP patterns
+  if (isPrivateIP(hostname)) {
+    throw new SafeFetchError("Private IP address is blocked", "blocked");
+  }
+  return url;
+}
+
+async function validateResolvedIP(hostname: string): Promise<void> {
   try {
-    const url = new URL(urlString);
-
-    if (url.protocol !== "http:" && url.protocol !== "https:") {
-      return { blocked: true, reason: `Protocol ${url.protocol} is not allowed` };
-    }
-
-    const hostname = url.hostname.toLowerCase();
-
-    if (BLOCKED_HOSTS.includes(hostname)) {
-      return { blocked: true, reason: `Host ${hostname} is blocked` };
-    }
-
-    for (const prefix of BLOCKED_PREFIXES) {
-      if (hostname.startsWith(prefix)) {
-        return { blocked: true, reason: `Private network IP range is blocked` };
+    const addresses = await lookup(hostname, { all: true });
+    for (const addr of addresses) {
+      if (isPrivateIP(addr.address)) {
+        throw new SafeFetchError(
+          `DNS resolved to private IP: ${addr.address}`,
+          "dns_blocked"
+        );
       }
     }
-
-    if (hostname.match(/^169\.254\./)) {
-      return { blocked: true, reason: "Link-local address is blocked" };
-    }
-
-    return { blocked: false };
-  } catch {
-    return { blocked: true, reason: "Invalid URL format" };
+  } catch (error) {
+    if (error instanceof SafeFetchError) throw error;
+    // DNS lookup failure — allow (will fail at fetch stage with clear error)
   }
 }
 
@@ -81,14 +89,8 @@ export async function safeFetch(
   urlString: string,
   timeoutMs: number = 10000
 ): Promise<{ text: string; status: number }> {
-  if (!isValidUrl(urlString)) {
-    throw new SafeFetchError("Invalid URL", "invalid_url");
-  }
-
-  const check = isBlockedUrl(urlString);
-  if (check.blocked) {
-    throw new SafeFetchError(check.reason ?? "URL is blocked", "blocked");
-  }
+  const url = validateUrl(urlString);
+  await validateResolvedIP(url.hostname);
 
   try {
     const controller = new AbortController();
@@ -100,18 +102,48 @@ export async function safeFetch(
         "User-Agent": "GEO-Lens/1.0 (AI Readiness Checker)",
         Accept: "text/html,application/xhtml+xml,text/plain",
       },
-      redirect: "follow",
+      redirect: "manual",
     });
 
     clearTimeout(timeoutId);
 
-    const text = await response.text();
+    // Follow redirects manually, validating each target
+    let currentResponse = response;
+    let redirectCount = 0;
+    const maxRedirects = 3;
 
+    while (
+      [301, 302, 303, 307, 308].includes(currentResponse.status) &&
+      redirectCount < maxRedirects
+    ) {
+      const location = currentResponse.headers.get("location");
+      if (!location) break;
+
+      const redirectUrl = new URL(location, urlString);
+      validateUrl(redirectUrl.href);
+      await validateResolvedIP(redirectUrl.hostname);
+
+      redirectCount++;
+      const ctrl = new AbortController();
+      const tid = setTimeout(() => ctrl.abort(), timeoutMs);
+      currentResponse = await fetch(redirectUrl.href, {
+        signal: ctrl.signal,
+        headers: {
+          "User-Agent": "GEO-Lens/1.0 (AI Readiness Checker)",
+          Accept: "text/html,application/xhtml+xml,text/plain",
+        },
+        redirect: "manual",
+      });
+      clearTimeout(tid);
+    }
+
+    const text = await currentResponse.text();
     return {
       text: text.slice(0, 50000),
-      status: response.status,
+      status: currentResponse.status,
     };
   } catch (error) {
+    if (error instanceof SafeFetchError) throw error;
     if (error instanceof DOMException && error.name === "AbortError") {
       throw new SafeFetchError("Request timed out", "timeout");
     }

@@ -1,26 +1,31 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { prisma } from "@/lib/db";
 import { formatDate } from "@/lib/utils";
-import { PlusCircle, ArrowRight } from "lucide-react";
+import { PlusCircle, ArrowRight, Loader2 } from "lucide-react";
+import { scoreToColor } from "@/lib/geo/scoring";
 
-export default async function ProjectsPage() {
-  let projects: Array<{
-    id: string;
-    name: string;
-    brandName: string;
-    updatedAt: Date;
-    isSample: boolean;
-    analyses: Array<{ totalScore: number }>;
-  }> = [];
+interface ProjectItem {
+  id: string;
+  name: string;
+  brandName: string;
+  updatedAt: string;
+  isSample: boolean;
+  analyses: Array<{ totalScore: number }>;
+}
 
-  try {
-    projects = await prisma.project.findMany({
-      orderBy: { updatedAt: "desc" },
-      include: {
-        analyses: { orderBy: { createdAt: "desc" }, take: 1 },
-      },
-    });
-  } catch {}
+export default function ProjectsPage() {
+  const [projects, setProjects] = useState<ProjectItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/projects")
+      .then((r) => r.json())
+      .then((d) => setProjects(d.projects || []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
@@ -28,7 +33,7 @@ export default async function ProjectsPage() {
         <div>
           <h1 className="text-2xl font-bold">Projects</h1>
           <p className="text-sm text-[var(--muted-foreground)] mt-1">
-            {projects.length} project{projects.length !== 1 ? "s" : ""}
+            {loading ? "Loading..." : `${projects.length} project${projects.length !== 1 ? "s" : ""}`}
           </p>
         </div>
         <Link
@@ -40,11 +45,13 @@ export default async function ProjectsPage() {
         </Link>
       </div>
 
-      {projects.length === 0 ? (
+      {loading ? (
         <div className="card p-12 text-center">
-          <div className="text-[var(--muted-foreground)] mb-4">
-            No projects yet.
-          </div>
+          <Loader2 className="h-6 w-6 animate-spin mx-auto" />
+        </div>
+      ) : projects.length === 0 ? (
+        <div className="card p-12 text-center">
+          <div className="text-[var(--muted-foreground)] mb-4">No projects yet.</div>
           <Link
             href="/projects/new"
             className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--primary)] text-white rounded-lg text-sm font-medium"
@@ -76,14 +83,7 @@ export default async function ProjectsPage() {
                 {p.analyses[0] && (
                   <div
                     className="text-xl font-bold"
-                    style={{
-                      color:
-                        p.analyses[0].totalScore >= 80
-                          ? "#22c55e"
-                          : p.analyses[0].totalScore >= 60
-                          ? "#eab308"
-                          : "#ef4444",
-                    }}
+                    style={{ color: scoreToColor(p.analyses[0].totalScore) }}
                   >
                     {p.analyses[0].totalScore}
                   </div>

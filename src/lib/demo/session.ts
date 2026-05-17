@@ -1,30 +1,70 @@
 import { cookies } from "next/headers";
-import { createHash } from "crypto";
+import { createHash } from "node:crypto";
 import { getEnv } from "@/lib/env";
+import type { NextRequest } from "next/server";
 
-const SESSION_COOKIE = "geo_lens_demo_session";
+export const DEMO_SESSION_COOKIE = "geo_lens_demo_session";
 
-export async function getDemoSessionHash(): Promise<string> {
-  const cookieStore = await cookies();
-  const existing = cookieStore.get(SESSION_COOKIE);
-
-  if (existing?.value) {
-    return existing.value;
-  }
-
-  const hash = createHash("sha256")
-    .update(Date.now().toString() + Math.random().toString())
-    .digest("hex")
-    .slice(0, 16);
-
-  return hash;
-}
-
-export function generateSessionHash(): string {
+export function createDemoSessionHash(): string {
   return createHash("sha256")
     .update(Date.now().toString() + Math.random().toString())
     .digest("hex")
     .slice(0, 16);
+}
+
+export interface SessionCookieOptions {
+  name: string;
+  value: string;
+  httpOnly: boolean;
+  secure: boolean;
+  sameSite: "lax" | "strict" | "none";
+  maxAge: number;
+  path: string;
+}
+
+export function getDemoCookieOptions(
+  hash: string
+): SessionCookieOptions {
+  const days = getEnv().DEMO_DATA_RETENTION_DAYS;
+  return {
+    name: DEMO_SESSION_COOKIE,
+    value: hash,
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: days * 24 * 60 * 60,
+    path: "/",
+  };
+}
+
+export async function getOrCreateDemoSessionFromRequest(
+  request: NextRequest
+): Promise<{ sessionHash: string; shouldSetCookie: boolean }> {
+  const cookieStore = await cookies();
+  const existing = cookieStore.get(DEMO_SESSION_COOKIE);
+
+  if (existing?.value) {
+    return { sessionHash: existing.value, shouldSetCookie: false };
+  }
+
+  // Also check the request cookies directly (for API routes)
+  const reqCookie = request.cookies.get(DEMO_SESSION_COOKIE);
+  if (reqCookie?.value) {
+    return { sessionHash: reqCookie.value, shouldSetCookie: false };
+  }
+
+  const hash = createDemoSessionHash();
+  return { sessionHash: hash, shouldSetCookie: true };
+}
+
+export function getSessionWhereClause(
+  isDemo: boolean,
+  sessionHash: string | null
+): Record<string, unknown> {
+  if (!isDemo || !sessionHash) return {};
+  return {
+    OR: [{ demoSessionHash: sessionHash }, { isSample: true }],
+  };
 }
 
 export async function canCreateProject(sessionHash: string): Promise<boolean> {

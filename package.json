@@ -15,7 +15,7 @@
     "db:seed": "npx tsx prisma/seed.ts",
     "db:studio": "prisma studio",
     "cleanup": "npx tsx scripts/cleanup-demo.ts",
-    "test:smoke": "echo 'Smoke test: verify build passes and pages load'"
+    "test:smoke": "npx tsx scripts/smoke-test.ts"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"
