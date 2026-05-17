@@ -7,7 +7,7 @@
 [![Next.js](https://img.shields.io/badge/Next.js-16-black)](https://nextjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://www.typescriptlang.org)
 
-**在线演示：** [https://geo-lens.your-domain.com](https://geo-lens.your-domain.com)
+**在线演示：** [https://github.com/nebula167/geo-lens](https://github.com/nebula167/geo-lens)
 
 [English](./README.md) | 中文
 
@@ -342,5 +342,4 @@ MIT — 详见 [LICENSE](./LICENSE)。
 
 ---
 
-**在线演示：** [https://geo-lens.your-domain.com](https://geo-lens.your-domain.com)  
 **GitHub：** [https://github.com/nebula167/geo-lens](https://github.com/nebula167/geo-lens)

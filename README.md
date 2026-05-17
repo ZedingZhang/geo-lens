@@ -2,12 +2,12 @@
 
 > Measure and improve your visibility in AI-powered search engines.
 
-[![CI](https://github.com/your-username/geo-lens/actions/workflows/ci.yml/badge.svg)](https://github.com/your-username/geo-lens/actions/workflows/ci.yml)
+[![CI](https://github.com/nebula167/geo-lens/actions/workflows/ci.yml/badge.svg)](https://github.com/nebula167/geo-lens/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Next.js](https://img.shields.io/badge/Next.js-16-black)](https://nextjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://www.typescriptlang.org)
 
-**Live Demo:** [https://geo-lens.your-domain.com](https://geo-lens.your-domain.com)
+**Live Demo:** Deploy with Vercel + Neon → [Deployment Guide](./DEPLOYMENT.md)
 
 English | [中文](./README_CN.md)
 
@@ -103,7 +103,7 @@ graph TD
 
 ```bash
 # Clone
-git clone https://github.com/your-username/geo-lens.git
+git clone https://github.com/nebula167/geo-lens.git
 cd geo-lens
 
 # Install dependencies
@@ -342,5 +342,4 @@ This is a portfolio project. Bug reports and suggestions are welcome via GitHub 
 
 ---
 
-**Online Demo:** [https://geo-lens.your-domain.com](https://geo-lens.your-domain.com)  
-**GitHub:** [https://github.com/your-username/geo-lens](https://github.com/your-username/geo-lens)
+**GitHub:** [https://github.com/nebula167/geo-lens](https://github.com/nebula167/geo-lens)
