@@ -9,6 +9,8 @@
 
 **Live Demo:** [https://geo-lens.your-domain.com](https://geo-lens.your-domain.com)
 
+English | [中文](./README_CN.md)
+
 ---
 
 ## What is GEO Lens?
