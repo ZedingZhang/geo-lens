@@ -1,0 +1,205 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Project {
+  id              String   @id @default(cuid())
+  name            String
+  brandName       String
+  websiteUrl      String?
+  description     String
+  audience        String
+  product         String
+  keywords        String
+  competitors     String?
+  isSample        Boolean  @default(false)
+  demoSessionHash String?
+  expiresAt       DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  analyses        Analysis[]
+  questions       SimulatedQuestion[]
+  recommendations Recommendation[]
+  diagnoses       CitationFailure[]
+  contentDiffs    ContentDiff[]
+  readinessAudits ReadinessAudit[]
+  promptItems     PromptItem[]
+  sourceMaps      CitationSource[]
+  experiments     GeoExperiment[]
+
+  @@index([isSample])
+  @@index([demoSessionHash])
+  @@index([expiresAt])
+}
+
+model Analysis {
+  id                String   @id @default(cuid())
+  projectId         String
+  totalScore        Int
+  entityClarity     Int
+  answerCoverage    Int
+  citationReadiness Int
+  contentStructure  Int
+  freshnessSignal   Int
+  strengths         String
+  weaknesses        String
+  nextActions       String
+  rawJson           String?
+  resultSource      String   @default("mock")
+  createdAt         DateTime @default(now())
+
+  project           Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model SimulatedQuestion {
+  id              String   @id @default(cuid())
+  projectId       String
+  question        String
+  intent          String
+  simulatedAnswer String
+  brandMentioned  Boolean
+  mentionReason   String
+  improvement     String
+  resultSource    String   @default("mock")
+  createdAt       DateTime @default(now())
+
+  project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model Recommendation {
+  id          String   @id @default(cuid())
+  projectId   String
+  type        String
+  title       String
+  content     String
+  priority    String
+  resultSource String  @default("mock")
+  createdAt   DateTime @default(now())
+
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model CitationFailure {
+  id                String   @id @default(cuid())
+  projectId         String
+  failureType       String
+  severity          String
+  evidence          String
+  reason            String
+  fix               String
+  impactedDimension String
+  relatedQuestionId String?
+  resultSource      String   @default("mock")
+  createdAt         DateTime @default(now())
+
+  project           Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([failureType])
+}
+
+model ContentDiff {
+  id                 String   @id @default(cuid())
+  projectId          String
+  sourceLabel        String
+  beforeContent      String
+  afterContent       String
+  changeSummary      String
+  rationale          String
+  impactedDimensions String
+  addedElements      String
+  resultSource       String   @default("mock")
+  recommendationId   String?
+  createdAt          DateTime @default(now())
+
+  project            Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+model ReadinessAudit {
+  id          String   @id @default(cuid())
+  projectId   String
+  totalScore  Int
+  checks      String
+  summary     String
+  rawJson     String?
+  resultSource String  @default("mock")
+  createdAt   DateTime @default(now())
+
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+model PromptItem {
+  id             String   @id @default(cuid())
+  projectId      String
+  prompt         String
+  intentType     String
+  funnelStage    String
+  priority       String
+  targetKeyword  String?
+  expectedBrands String
+  demandScore    Int
+  resultSource   String   @default("mock")
+  createdAt      DateTime @default(now())
+
+  project        Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([intentType])
+}
+
+model CitationSource {
+  id                    String   @id @default(cuid())
+  projectId             String
+  category              String
+  coverage              String
+  influence             String
+  gap                   String
+  recommendedStrategies String
+  resultSource          String   @default("mock")
+  createdAt             DateTime @default(now())
+
+  project               Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([category])
+}
+
+model GeoExperiment {
+  id                 String    @id @default(cuid())
+  projectId          String
+  name               String
+  strategyId         String?
+  status             String    @default("planned")
+  baselineScore      Int?
+  afterScore         Int?
+  delta              Int?
+  impactedDimensions String
+  notes              String?
+  createdAt          DateTime  @default(now())
+  completedAt        DateTime?
+
+  project            Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([status])
+}
+
+model UsageEvent {
+  id        String   @id @default(cuid())
+  ipHash    String
+  action    String
+  mode      String
+  createdAt DateTime @default(now())
+
+  @@index([ipHash, createdAt])
+}
