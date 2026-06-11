@@ -2,7 +2,7 @@
 
 > Measure and improve your visibility in AI-powered search engines.
 
-[![CI](https://github.com/nebula167/geo-lens/actions/workflows/ci.yml/badge.svg)](https://github.com/nebula167/geo-lens/actions/workflows/ci.yml)
+[![CI](https://github.com/ZedingZhang/geo-lens/actions/workflows/ci.yml/badge.svg)](https://github.com/ZedingZhang/geo-lens/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Next.js](https://img.shields.io/badge/Next.js-16-black)](https://nextjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://www.typescriptlang.org)
@@ -103,7 +103,7 @@ graph TD
 
 ```bash
 # Clone
-git clone https://github.com/nebula167/geo-lens.git
+git clone https://github.com/ZedingZhang/geo-lens.git
 cd geo-lens
 
 # Install dependencies
@@ -342,4 +342,4 @@ This is a portfolio project. Bug reports and suggestions are welcome via GitHub 
 
 ---
 
-**GitHub:** [https://github.com/nebula167/geo-lens](https://github.com/nebula167/geo-lens)
+**GitHub:** [https://github.com/ZedingZhang/geo-lens](https://github.com/ZedingZhang/geo-lens)

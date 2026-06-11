@@ -2,12 +2,12 @@
 
 > 衡量并提升你在 AI 搜索引擎中的可见度。
 
-[![CI](https://github.com/nebula167/geo-lens/actions/workflows/ci.yml/badge.svg)](https://github.com/nebula167/geo-lens/actions/workflows/ci.yml)
+[![CI](https://github.com/ZedingZhang/geo-lens/actions/workflows/ci.yml/badge.svg)](https://github.com/ZedingZhang/geo-lens/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Next.js](https://img.shields.io/badge/Next.js-16-black)](https://nextjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://www.typescriptlang.org)
 
-**在线演示：** [https://github.com/nebula167/geo-lens](https://github.com/nebula167/geo-lens)
+**在线演示：** [https://github.com/ZedingZhang/geo-lens](https://github.com/ZedingZhang/geo-lens)
 
 [English](./README.md) | 中文
 
@@ -103,7 +103,7 @@ graph TD
 
 ```bash
 # 克隆仓库
-git clone https://github.com/nebula167/geo-lens.git
+git clone https://github.com/ZedingZhang/geo-lens.git
 cd geo-lens
 
 # 安装依赖
@@ -342,4 +342,4 @@ MIT — 详见 [LICENSE](./LICENSE)。
 
 ---
 
-**GitHub：** [https://github.com/nebula167/geo-lens](https://github.com/nebula167/geo-lens)
+**GitHub：** [https://github.com/ZedingZhang/geo-lens](https://github.com/ZedingZhang/geo-lens)
