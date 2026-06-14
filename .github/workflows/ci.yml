@@ -7,38 +7,31 @@ on:
     branches: [main]
 
 jobs:
-  build:
+  check:
     runs-on: ubuntu-latest
-
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: geo_lens
-          POSTGRES_PASSWORD: geo_lens_password
-          POSTGRES_DB: geo_lens_test
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
 
     steps:
       - uses: actions/checkout@v4
+
       - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: "pnpm"
-      - run: pnpm install --frozen-lockfile
-      - run: npx prisma generate
-      - run: pnpm lint
-      - run: pnpm build
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Type check
+        run: pnpm typecheck
+
+      - name: Build
+        run: pnpm build
         env:
-          DATABASE_URL: postgresql://geo_lens:geo_lens_password@localhost:5432/geo_lens_test
-          DIRECT_URL: postgresql://geo_lens:geo_lens_password@localhost:5432/geo_lens_test
-          DEMO_MODE: "true"
-          CRON_SECRET: test_secret
-          LLM_API_KEY: ""
+          DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
