@@ -264,14 +264,13 @@ GEO Lens is not just an AI content generator. It implements:
 
 ---
 
-## Technical Highlights
+## Engineering Highlights
 
-- **LLM JSON Schema Validation:** All LLM outputs validated with Zod; failures fall back to mock data
-- **Mock Fallback System:** Stable mock data enables full feature demo without API keys
-- **Rate Limiting:** In-memory rate limiter with salted IP hashing
-- **Dual Deployment:** Vercel + Neon for resume demos; Docker Compose + VPS for engineering showcase
-- **SSRF Protection:** URL fetching blocks localhost, private IPs, metadata endpoints
-- **Demo Session Isolation:** Anonymous users see only their data; auto-cleanup prevents pollution
+- Next.js App Router + TypeScript
+- Prisma data model with project/session isolation
+- Demo-safe mode with anonymous sessions and expiration
+- SSRF protection for external URL analysis
+- Deployment profiles: Vercel + Neon, Docker Compose + VPS
 
 ---
 
@@ -319,14 +318,9 @@ GEO Lens | Generative Engine Optimization Platform
 
 ## Screenshots
 
-> Add 3-5 screenshots showing:
-> 1. Project Dashboard with GEO Score chart
-> 2. AI Answer Simulation results
-> 3. Citation Failure Diagnosis panel
-> 4. Before/After Diff comparison
-> 5. Strategy Library with filters
-
-*Screenshots placeholder — add your own or check the live demo.*
+| Dashboard | AI Answer Simulation | Citation Diagnosis |
+|---|---|---|
+| <img src="docs/screenshots/dashboard.png"> | <img src="docs/screenshots/simulation.png"> | <img src="docs/screenshots/citation-diagnosis.png"> |
 
 ---
 
