@@ -13,6 +13,21 @@ English | [中文](./README_CN.md)
 
 ---
 
+## 30-second verification
+
+Run the type-level and Prisma generation checks without live LLM credentials:
+
+```bash
+git clone https://github.com/ZedingZhang/geo-lens.git
+cd geo-lens
+pnpm install
+cp .env.example .env
+pnpm db:generate
+pnpm typecheck
+```
+
+---
+
 ## What is GEO Lens?
 
 GEO Lens is a **Generative Engine Optimization** analysis platform for content teams and personal brands. It evaluates whether your brand can be **discovered, summarized, and cited** by AI answer engines like ChatGPT, Perplexity, and Google AI Overviews.
