@@ -65,28 +65,63 @@ GEO Lens 是一个面向内容团队和个人品牌的**生成式引擎优化**�
 ## 架构图
 
 ```mermaid
-graph TD
-    Browser[浏览器] --> Vercel[Vercel / Next.js]
-    Vercel --> API[API 路由]
-    API --> LLM[LLM 客户端]
-    API --> Prisma[Prisma 客户端]
-    LLM --> DeepSeek[DeepSeek API]
-    LLM --> Mock[Mock 兜底]
-    Prisma --> DB[(PostgreSQL / Neon)]
-    DB --> Cleanup[Demo 清理定时任务]
+flowchart TB
+    user["用户 / 浏览器"]
 
-    subgraph "Demo 模式"
-        Mock
+    subgraph app["Next.js 16 App Router"]
+        pages["React 页面<br/>项目、分析、策略库、设置"]
+        api["REST API 路由<br/>/api/projects/*, /api/strategies, /api/health"]
+        meta["GEO 元数据路由<br/>robots.txt, sitemap.xml, llms.txt"]
     end
 
-    subgraph "Live 模式"
-        DeepSeek
+    subgraph services["服务端能力"]
+        guards["Demo 访问控制 + 限流<br/>会话隔离、输入长度限制"]
+        geo["GEO 领域逻辑<br/>评分、审计、diff、来源地图、实验"]
+        prompts["Prompt 构建器 + Zod Schema"]
+        llm["LLM 客户端<br/>超时、JSON 校验、兜底"]
+        fetcher["safe-fetch<br/>防 SSRF 的站点检查"]
+        report["Markdown 报告生成器"]
+        mock["稳定 Mock 数据"]
     end
 
-    subgraph "部署方案"
-        Vercel
-        Docker[Docker Compose + VPS]
+    subgraph data["数据持久化"]
+        prisma["Prisma Client"]
+        db[(PostgreSQL / Neon)]
+        models["Project、Analysis、Questions<br/>Recommendations、Diagnostics、Readiness<br/>Prompts、Sources、Experiments"]
     end
+
+    subgraph external["外部系统"]
+        deepseek["DeepSeek 兼容 OpenAI API"]
+        target["目标品牌站点<br/>HTML、robots.txt、sitemap.xml、llms.txt"]
+    end
+
+    subgraph ops["部署与运维"]
+        deploy["Vercel + Neon<br/>或 Docker Compose + VPS"]
+        env["环境变量配置<br/>DEMO_MODE、LLM_*、DATABASE_URL"]
+        cleanup["Demo 清理定时任务<br/>CRON_SECRET 保护"]
+    end
+
+    user --> pages
+    pages --> api
+    pages --> meta
+    api --> guards
+    guards --> geo
+    geo --> prompts
+    prompts --> llm
+    llm -->|"live 模式"| deepseek
+    llm -->|"demo 或 fallback"| mock
+    geo --> fetcher
+    fetcher --> target
+    api --> report
+    api --> prisma
+    geo --> prisma
+    report --> prisma
+    prisma --> db
+    db --> models
+    cleanup --> prisma
+    env --> api
+    env --> llm
+    deploy --> app
 ```
 
 ---

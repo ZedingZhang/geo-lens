@@ -65,28 +65,63 @@ Traditional SEO measures keyword rankings and organic traffic. But users increas
 ## Architecture
 
 ```mermaid
-graph TD
-    Browser[Browser] --> Vercel[Vercel / Next.js]
-    Vercel --> API[API Routes]
-    API --> LLM[LLM Client]
-    API --> Prisma[Prisma Client]
-    LLM --> DeepSeek[DeepSeek API]
-    LLM --> Mock[Mock Fallback]
-    Prisma --> DB[(PostgreSQL / Neon)]
-    DB --> Cleanup[Demo Cleanup Cron]
+flowchart TB
+    user["User / Browser"]
 
-    subgraph "Demo Mode"
-        Mock
+    subgraph app["Next.js 16 App Router"]
+        pages["React Pages<br/>Projects, Analysis, Strategy Library, Settings"]
+        api["REST API Routes<br/>/api/projects/*, /api/strategies, /api/health"]
+        meta["GEO Metadata Routes<br/>robots.txt, sitemap.xml, llms.txt"]
     end
 
-    subgraph "Live Mode"
-        DeepSeek
+    subgraph services["Server-Side Services"]
+        guards["Demo Access + Rate Limit<br/>Session isolation, input limits"]
+        geo["GEO Domain Logic<br/>scoring, readiness, diff, source map, experiments"]
+        prompts["Prompt Builders + Zod Schemas"]
+        llm["LLM Client<br/>timeout, JSON validation, fallback"]
+        fetcher["safe-fetch<br/>SSRF-protected website checks"]
+        report["Markdown Report Generator"]
+        mock["Stable Mock Data"]
     end
 
-    subgraph "Deployment Options"
-        Vercel
-        Docker[Docker Compose + VPS]
+    subgraph data["Persistence"]
+        prisma["Prisma Client"]
+        db[(PostgreSQL / Neon)]
+        models["Project, Analysis, Questions<br/>Recommendations, Diagnostics, Readiness<br/>Prompts, Sources, Experiments"]
     end
+
+    subgraph external["External Systems"]
+        deepseek["DeepSeek-compatible OpenAI API"]
+        target["Target Brand Website<br/>HTML, robots.txt, sitemap.xml, llms.txt"]
+    end
+
+    subgraph ops["Deployment + Operations"]
+        deploy["Vercel + Neon<br/>or Docker Compose + VPS"]
+        env["Environment Config<br/>DEMO_MODE, LLM_*, DATABASE_URL"]
+        cleanup["Demo Cleanup Cron<br/>CRON_SECRET protected"]
+    end
+
+    user --> pages
+    pages --> api
+    pages --> meta
+    api --> guards
+    guards --> geo
+    geo --> prompts
+    prompts --> llm
+    llm -->|"live mode"| deepseek
+    llm -->|"demo or fallback"| mock
+    geo --> fetcher
+    fetcher --> target
+    api --> report
+    api --> prisma
+    geo --> prisma
+    report --> prisma
+    prisma --> db
+    db --> models
+    cleanup --> prisma
+    env --> api
+    env --> llm
+    deploy --> app
 ```
 
 ---
