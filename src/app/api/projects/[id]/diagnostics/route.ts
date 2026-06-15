@@ -7,6 +7,11 @@ import { CitationFailureResponseSchema } from "@/lib/llm/schemas";
 import { buildDiagnosticsPrompt } from "@/lib/llm/prompts";
 import { MOCK_DIAGNOSTICS } from "@/lib/mock-data";
 import { parseJsonField } from "@/lib/utils";
+import {
+  buildRuleBasedCitationFailures,
+  mergeCitationFailures,
+  normalizeCitationFailureCandidate,
+} from "@/lib/geo/citation-failure-taxonomy";
 
 export async function POST(
   request: NextRequest,
@@ -20,7 +25,7 @@ export async function POST(
     const access = await assertProjectWriteAccess(request, id);
     if (!access.allowed) return access.response;
     const project = access.project as typeof access.project & {
-      brandName: string; description: string;
+      brandName: string; description: string; websiteUrl: string | null;
     };
 
     const latestAnalysis = await prisma.analysis.findFirst({
@@ -34,30 +39,62 @@ export async function POST(
       take: 8,
     });
 
+    const latestReadinessAudit = await prisma.readinessAudit.findFirst({
+      where: { projectId: id },
+      orderBy: { createdAt: "desc" },
+    });
+
+    const scores = {
+      entityClarity: latestAnalysis?.entityClarity ?? 50,
+      answerCoverage: latestAnalysis?.answerCoverage ?? 50,
+      citationReadiness: latestAnalysis?.citationReadiness ?? 50,
+      contentStructure: latestAnalysis?.contentStructure ?? 50,
+      freshnessSignal: latestAnalysis?.freshnessSignal ?? 50,
+    };
+
+    const questions = existingQuestions.map((q) => ({
+      question: q.question,
+      brandMentioned: q.brandMentioned,
+      simulatedAnswer: q.simulatedAnswer,
+    }));
+
     const prompt = buildDiagnosticsPrompt({
       brandName: project.brandName,
       description: project.description,
-      scores: {
-        entityClarity: latestAnalysis?.entityClarity ?? 50,
-        answerCoverage: latestAnalysis?.answerCoverage ?? 50,
-        citationReadiness: latestAnalysis?.citationReadiness ?? 50,
-        contentStructure: latestAnalysis?.contentStructure ?? 50,
-        freshnessSignal: latestAnalysis?.freshnessSignal ?? 50,
-      },
-      questions: existingQuestions.map((q) => ({
-        question: q.question,
-        brandMentioned: q.brandMentioned,
-        simulatedAnswer: q.simulatedAnswer,
-      })),
+      scores,
+      questions,
     });
 
     const mockDiagnostics = { failures: MOCK_DIAGNOSTICS };
     const result = await callLLM(prompt, CitationFailureResponseSchema, mockDiagnostics);
+    const readinessChecks = latestReadinessAudit
+      ? parseJsonField<Array<{
+          key: string;
+          label: string;
+          status: string;
+          impact: string;
+          fix: string;
+        }>>(latestReadinessAudit.checks, [])
+      : [];
+    const ruleFailures = buildRuleBasedCitationFailures({
+      brandName: project.brandName,
+      description: project.description,
+      websiteUrl: project.websiteUrl,
+      scores,
+      questions,
+      readinessChecks,
+    });
+    const failures = mergeCitationFailures(
+      result.data.failures.map((failure) =>
+        normalizeCitationFailureCandidate(failure)
+      ),
+      ruleFailures
+    );
 
     await prisma.citationFailure.deleteMany({ where: { projectId: id } });
 
     const diagnoses = await Promise.all(
-      result.data.failures.map((f) =>
+      failures.map((f) =>
         prisma.citationFailure.create({
           data: {
             projectId: id,

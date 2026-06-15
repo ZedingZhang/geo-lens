@@ -182,18 +182,18 @@ export const MOCK_RECOMMENDATIONS = [
 
 export const MOCK_DIAGNOSTICS: CF[] = [
   {
-    failureType: "entity_ambiguity",
+    failureType: "AMBIGUOUS_BRAND_NAME",
     severity: "high",
     evidence:
-      "When asked 'What is the best GEO analysis tool?', the simulated AI answer did not mention the brand. The brand description is too generic to be recognized as a distinct entity by AI engines.",
+      "The homepage does not clearly define whether GEO Lens is a SaaS product, research tool, or developer demo.",
     reason:
-      "AI answer engines need a clear, concise entity definition to recognize a brand as a relevant recommendation. Vague descriptions fail to establish category membership.",
-    fix: "Add a one-sentence entity definition: 'GEO Lens is a generative engine optimization platform for content teams that measures AI answer engine visibility across five dimensions.'",
+      "AI answer engines may avoid citing the page because the entity boundary is unclear.",
+    fix: "Add a 40-word entity definition near the top of the homepage.",
     impactedDimension: "Entity Clarity",
     relatedQuestion: "What is the best GEO analysis tool for small content teams?",
   },
   {
-    failureType: "missing_citable_facts",
+    failureType: "NO_NUMERIC_EVIDENCE",
     severity: "high",
     evidence:
       "AI simulated answers consistently use generic descriptions instead of citing specific features, numbers, or proof points about the brand. No statistics, dates, or verifiable claims are available for AI to quote.",
@@ -204,7 +204,7 @@ export const MOCK_DIAGNOSTICS: CF[] = [
     relatedQuestion: "How can I check if my brand appears in AI search results?",
   },
   {
-    failureType: "weak_comparison_context",
+    failureType: "NO_COMPARISON_CONTEXT",
     severity: "medium",
     evidence:
       "The brand is mentioned when explicitly searched ('GEO Lens vs traditional SEO tools') but not when users search for general GEO tool recommendations. Competitors with stronger comparison context dominate general queries.",
@@ -215,7 +215,7 @@ export const MOCK_DIAGNOSTICS: CF[] = [
     relatedQuestion: "GEO Lens vs traditional SEO tools - what's the difference?",
   },
   {
-    failureType: "structure_gap",
+    failureType: "NO_STRUCTURED_DATA",
     severity: "medium",
     evidence:
       "The content lacks FAQ sections, structured data, tables, and lists that AI engines can easily parse and extract. Current content is primarily narrative paragraphs.",
@@ -225,7 +225,7 @@ export const MOCK_DIAGNOSTICS: CF[] = [
     impactedDimension: "Content Structure",
   },
   {
-    failureType: "intent_mismatch",
+    failureType: "CONTENT_NOT_ANSWER_SHAPED",
     severity: "medium",
     evidence:
       "The content focuses on describing what the product does, but doesn't answer the questions users actually ask AI engines ('how to check AI visibility', 'why am I not showing up', 'what metrics matter').",

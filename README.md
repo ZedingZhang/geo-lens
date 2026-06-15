@@ -49,7 +49,7 @@ Traditional SEO measures keyword rankings and organic traffic. But users increas
 - **Markdown Report Export:** Downloadable report with all analysis results
 
 ### P1 — Research Differentiators
-- **Citation Failure Diagnosis:** Diagnose *why* AI engines don't cite your brand (7 failure types, severity-rated)
+- **Citation Failure Diagnosis:** Diagnose *why* AI engines don't cite your brand (12-type taxonomy, primary failure, evidence, impact, fix)
 - **Before / After GEO Diff:** Side-by-side content comparison showing GEO improvement
 - **Strategy Library:** 9 built-in GEO strategies with before/after examples, filterable by dimension
 

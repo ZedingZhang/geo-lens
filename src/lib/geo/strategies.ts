@@ -1,3 +1,8 @@
+import {
+  type CitationFailureType,
+  normalizeCitationFailureType,
+} from "@/lib/geo/citation-failure-taxonomy";
+
 export interface StrategyItem {
   id: string;
   name: string;
@@ -8,7 +13,7 @@ export interface StrategyItem {
   beforeExample: string;
   afterExample: string;
   implementationHint: string;
-  applicableFailureTypes: string[];
+  applicableFailureTypes: CitationFailureType[];
   category: "content" | "technical" | "comparison" | "freshness";
 }
 
@@ -27,7 +32,7 @@ export const STRATEGY_LIBRARY: StrategyItem[] = [
       "GEO Lens is a generative engine optimization platform for content teams and personal brands. It evaluates whether a brand can be discovered, summarized, and cited by AI answer engines like ChatGPT, Perplexity, and Google AI Overviews.",
     implementationHint:
       "Add a clear one-sentence entity definition near the top of the page, including what you do and who it's for.",
-    applicableFailureTypes: ["entity_ambiguity"],
+    applicableFailureTypes: ["AMBIGUOUS_BRAND_NAME", "NO_ENTITY_DEFINITION"],
     category: "content",
   },
   {
@@ -44,7 +49,7 @@ export const STRATEGY_LIBRARY: StrategyItem[] = [
       "GEO Lens is a generative engine optimization audit tool for small content teams. It evaluates whether a brand can be discovered, summarized, and cited by AI answer engines.",
     implementationHint:
       "Add a 2-3 sentence factual summary near the top of the page that an AI can quote verbatim.",
-    applicableFailureTypes: ["missing_citable_facts", "over_marketing"],
+    applicableFailureTypes: ["NO_NUMERIC_EVIDENCE", "CONTENT_TOO_MARKETING_HEAVY"],
     category: "content",
   },
   {
@@ -62,9 +67,9 @@ export const STRATEGY_LIBRARY: StrategyItem[] = [
     implementationHint:
       "Add a FAQ section with 5-10 high-intent questions and concise answers using FAQPage schema.",
     applicableFailureTypes: [
-      "intent_mismatch",
-      "structure_gap",
-      "missing_citable_facts",
+      "CONTENT_NOT_ANSWER_SHAPED",
+      "NO_STRUCTURED_DATA",
+      "NO_NUMERIC_EVIDENCE",
     ],
     category: "content",
   },
@@ -83,9 +88,9 @@ export const STRATEGY_LIBRARY: StrategyItem[] = [
     implementationHint:
       "Add objective comparison points with competitors, including specific dimensions where you differ.",
     applicableFailureTypes: [
-      "weak_comparison_context",
-      "entity_ambiguity",
-      "missing_citable_facts",
+      "NO_COMPARISON_CONTEXT",
+      "AMBIGUOUS_BRAND_NAME",
+      "NO_NUMERIC_EVIDENCE",
     ],
     category: "comparison",
   },
@@ -104,9 +109,9 @@ export const STRATEGY_LIBRARY: StrategyItem[] = [
     implementationHint:
       "Add specific numbers, dates, release versions, case counts, or third-party references throughout the page.",
     applicableFailureTypes: [
-      "missing_citable_facts",
-      "over_marketing",
-      "freshness_gap",
+      "NO_NUMERIC_EVIDENCE",
+      "CONTENT_TOO_MARKETING_HEAVY",
+      "NO_DATE_STAMPED_FACTS",
     ],
     category: "freshness",
   },
@@ -125,9 +130,9 @@ export const STRATEGY_LIBRARY: StrategyItem[] = [
     implementationHint:
       "Clearly state who the product is for and who it is NOT for.",
     applicableFailureTypes: [
-      "entity_ambiguity",
-      "intent_mismatch",
-      "over_marketing",
+      "AMBIGUOUS_BRAND_NAME",
+      "CONTENT_NOT_ANSWER_SHAPED",
+      "CONTENT_TOO_MARKETING_HEAVY",
     ],
     category: "content",
   },
@@ -145,7 +150,7 @@ export const STRATEGY_LIBRARY: StrategyItem[] = [
       'Add Organization schema with name, description, URL, sameAs links. Add FAQPage schema for FAQ sections. Add Product schema for core offerings.',
     implementationHint:
       "Add JSON-LD structured data for Organization, FAQPage, and Product types.",
-    applicableFailureTypes: ["structure_gap", "entity_ambiguity"],
+    applicableFailureTypes: ["NO_STRUCTURED_DATA", "NO_ENTITY_DEFINITION"],
     category: "technical",
   },
   {
@@ -162,7 +167,7 @@ export const STRATEGY_LIBRARY: StrategyItem[] = [
       "Last updated: May 2026. Current version: v2.1. Data refreshed weekly based on user-reported GEO score changes.",
     implementationHint:
       "Add last-updated dates, version numbers, release notes, or data freshness indicators.",
-    applicableFailureTypes: ["freshness_gap"],
+    applicableFailureTypes: ["NO_DATE_STAMPED_FACTS"],
     category: "freshness",
   },
   {
@@ -179,7 +184,7 @@ export const STRATEGY_LIBRARY: StrategyItem[] = [
       "# GEO Lens\n\nGEO Lens is a generative engine optimization analysis platform.\n\n## Key Pages\n- /projects: Create and manage GEO analysis projects\n- /strategies: Browse GEO optimization strategies\n\n## Tech Stack\nNext.js, Prisma, PostgreSQL, OpenAI-compatible API",
     implementationHint:
       "Add a /llms.txt file with a concise project summary and key page links.",
-    applicableFailureTypes: ["structure_gap"],
+    applicableFailureTypes: ["ROBOTS_OR_SITEMAP_ISSUE", "NO_INDEXABLE_PAGE"],
     category: "technical",
   },
 ];
@@ -195,8 +200,9 @@ export function getStrategiesByDimension(dimension: string): StrategyItem[] {
 export function getStrategiesByFailureType(
   failureType: string
 ): StrategyItem[] {
+  const normalizedFailureType = normalizeCitationFailureType(failureType);
   return STRATEGY_LIBRARY.filter((s) =>
-    s.applicableFailureTypes.includes(failureType)
+    s.applicableFailureTypes.includes(normalizedFailureType)
   );
 }
 

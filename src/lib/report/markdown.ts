@@ -1,4 +1,8 @@
 import { parseJsonField } from "@/lib/utils";
+import {
+  getCitationFailureLabel,
+  selectPrimaryCitationFailure,
+} from "@/lib/geo/citation-failure-taxonomy";
 
 interface ProjectForReport {
   name: string;
@@ -138,16 +142,32 @@ ${!q.brandMentioned ? `**Improvement:** ${q.improvement}` : `**Why:** ${q.mentio
 
   // Diagnostics
   if (project.diagnoses.length > 0) {
+    const primaryFailure = selectPrimaryCitationFailure(project.diagnoses);
     sections.push(`## Citation Failure Diagnosis
+
+${primaryFailure ? `Primary failure:
+${primaryFailure.failureType}
+
+Evidence:
+${primaryFailure.evidence}
+
+Impact:
+${primaryFailure.reason}
+
+Fix:
+${primaryFailure.fix}
+
+---` : ""}
 
 ${project.diagnoses
   .map(
     (d) =>
-      `### ${d.failureType.replace(/_/g, " ")} — ${d.severity.toUpperCase()}
+      `### ${getCitationFailureLabel(d.failureType)} - ${d.severity.toUpperCase()}
+- **Type:** ${d.failureType}
 - **Evidence:** ${d.evidence}
-- **Reason:** ${d.reason}
+- **Impact:** ${d.reason}
 - **Fix:** ${d.fix}
-- **Impact:** ${d.impactedDimension}
+- **Dimension:** ${d.impactedDimension}
 `
   )
   .join("\n")}`);

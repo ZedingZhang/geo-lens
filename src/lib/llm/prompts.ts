@@ -1,5 +1,4 @@
-// Type imports from schemas are not needed at runtime —
-// prompt builders accept plain objects with the needed fields.
+import { CITATION_FAILURE_TYPES } from "@/lib/geo/citation-failure-taxonomy";
 
 export function buildGeoAnalysisPrompt(project: {
   name: string;
@@ -137,11 +136,14 @@ ${project.questions
   )
   .join("\n\n")}
 
+Use this fixed Citation Failure Taxonomy:
+${CITATION_FAILURE_TYPES.map((type) => `- ${type}`).join("\n")}
+
 Identify 3-6 potential failure reasons. For each:
-- failureType: one of entity_ambiguity, intent_mismatch, missing_citable_facts, weak_comparison_context, over_marketing, freshness_gap, structure_gap
+- failureType: exactly one value from the taxonomy above
 - severity: high/medium/low
 - evidence: specific evidence from the data
-- reason: why this causes AI citation failure
+- reason: impact on AI citation behavior, written as the report "Impact"
 - fix: specific actionable fix
 - impactedDimension: which GEO dimension this affects
 - relatedQuestion: which simulated question this relates to (optional)

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { CITATION_FAILURE_TYPES } from "@/lib/geo/citation-failure-taxonomy";
 
 export const DimensionScoresSchema = z.object({
   entityClarity: z.number().int().min(0).max(100),
@@ -41,7 +42,7 @@ export const RecommendationsResponseSchema = z.object({
 });
 
 export const CitationFailureSchema = z.object({
-  failureType: z.string(),
+  failureType: z.enum(CITATION_FAILURE_TYPES),
   severity: z.enum(["high", "medium", "low"]),
   evidence: z.string(),
   reason: z.string(),

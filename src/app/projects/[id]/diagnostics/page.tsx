@@ -3,6 +3,11 @@
 import { useEffect, useState, use } from "react";
 import { Loader2, Sparkles, Stethoscope, AlertTriangle, AlertCircle, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  CITATION_FAILURE_TYPES,
+  getCitationFailureLabel,
+  selectPrimaryCitationFailure,
+} from "@/lib/geo/citation-failure-taxonomy";
 
 const severityIcon = { high: AlertCircle, medium: AlertTriangle, low: Info };
 const severityColor = { high: "border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950", medium: "border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950", low: "border-blue-300 dark:border-blue-800 bg-blue-50 dark:bg-blue-950" };
@@ -42,13 +47,14 @@ export default function DiagnosticsPage({ params }: { params: Promise<{ id: stri
     const order = { high: 0, medium: 1, low: 2 };
     return order[a.severity] - order[b.severity];
   });
+  const primaryFailure = selectPrimaryCitationFailure(sorted);
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold">Citation Failure Diagnosis</h1>
-          <p className="text-sm text-[var(--muted-foreground)] mt-1">Diagnose why your brand fails to be cited by AI answer engines</p>
+          <p className="text-sm text-[var(--muted-foreground)] mt-1">Taxonomy-based diagnosis for why AI answer engines do not cite the brand</p>
         </div>
         <button onClick={generate} disabled={generating} className="flex items-center gap-1.5 px-3 py-2 bg-[var(--primary)] text-white rounded-lg text-sm font-medium hover:opacity-90 disabled:opacity-50">
           {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
@@ -64,7 +70,49 @@ export default function DiagnosticsPage({ params }: { params: Promise<{ id: stri
           <button onClick={generate} className="px-4 py-2 bg-[var(--primary)] text-white rounded-lg text-sm font-medium">Run Diagnosis</button>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-4">
+          {primaryFailure && (
+            <div className="card p-5 border-2 border-[var(--primary)]">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="badge badge-error text-[10px]">Primary failure</span>
+                <h2 className="font-semibold text-sm">
+                  {primaryFailure.failureType}
+                </h2>
+              </div>
+              <div className="grid gap-3 md:grid-cols-3">
+                <div>
+                  <div className="text-xs font-medium text-[var(--muted-foreground)] mb-1">
+                    Evidence
+                  </div>
+                  <p className="text-sm">{primaryFailure.evidence}</p>
+                </div>
+                <div>
+                  <div className="text-xs font-medium text-[var(--muted-foreground)] mb-1">
+                    Impact
+                  </div>
+                  <p className="text-sm">{primaryFailure.reason}</p>
+                </div>
+                <div>
+                  <div className="text-xs font-medium text-green-600 dark:text-green-400 mb-1">
+                    Fix
+                  </div>
+                  <p className="text-sm">{primaryFailure.fix}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="card p-4">
+            <h2 className="font-semibold text-sm mb-3">Citation Failure Taxonomy</h2>
+            <div className="flex flex-wrap gap-1.5">
+              {CITATION_FAILURE_TYPES.map((type) => (
+                <span key={type} className="badge badge-info text-[10px]">
+                  {getCitationFailureLabel(type)}
+                </span>
+              ))}
+            </div>
+          </div>
+
           {sorted.map((d) => {
             const Icon = severityIcon[d.severity];
             return (
@@ -75,13 +123,14 @@ export default function DiagnosticsPage({ params }: { params: Promise<{ id: stri
                   )} />
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-medium text-sm capitalize">{d.failureType.replace(/_/g, " ")}</h3>
+                      <h3 className="font-medium text-sm">{getCitationFailureLabel(d.failureType)}</h3>
                       <span className={cn("badge text-[10px]", d.severity === "high" ? "badge-error" : d.severity === "medium" ? "badge-warning" : "badge-info")}>{d.severity}</span>
+                      <span className="badge badge-info text-[10px]">{d.failureType}</span>
                       <span className="badge badge-info text-[10px]">{d.impactedDimension}</span>
                     </div>
                     <div className="space-y-2 text-sm">
                       <div><span className="font-medium text-xs text-[var(--muted-foreground)]">Evidence: </span>{d.evidence}</div>
-                      <div><span className="font-medium text-xs text-[var(--muted-foreground)]">Reason: </span>{d.reason}</div>
+                      <div><span className="font-medium text-xs text-[var(--muted-foreground)]">Impact: </span>{d.reason}</div>
                       <div className="pt-1 border-t border-current/10">
                         <span className="font-medium text-xs text-green-600 dark:text-green-400">Fix: </span>{d.fix}
                       </div>

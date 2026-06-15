@@ -112,23 +112,23 @@ export function recommendStrategiesForScores(
   const dimensions: string[] = [];
 
   if (scores.entityClarity < 60) {
-    failureTypes.push("entity_ambiguity");
+    failureTypes.push("AMBIGUOUS_BRAND_NAME");
     dimensions.push("Entity Clarity");
   }
   if (scores.answerCoverage < 60) {
-    failureTypes.push("intent_mismatch");
+    failureTypes.push("CONTENT_NOT_ANSWER_SHAPED");
     dimensions.push("Answer Coverage");
   }
   if (scores.citationReadiness < 60) {
-    failureTypes.push("missing_citable_facts");
+    failureTypes.push("NO_NUMERIC_EVIDENCE");
     dimensions.push("Citation Readiness");
   }
   if (scores.contentStructure < 60) {
-    failureTypes.push("structure_gap");
+    failureTypes.push("NO_STRUCTURED_DATA");
     dimensions.push("Content Structure");
   }
   if (scores.freshnessSignal < 60) {
-    failureTypes.push("freshness_gap");
+    failureTypes.push("NO_DATE_STAMPED_FACTS");
     dimensions.push("Freshness Signal");
   }
 
