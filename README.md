@@ -45,14 +45,15 @@ Traditional SEO measures keyword rankings and organic traffic. But users increas
 - **Five-Dimension GEO Scoring:** Entity Clarity · Answer Coverage · Citation Readiness · Content Structure · Freshness Signal
 - **Score Dashboard:** Radar/bar charts with strengths, weaknesses, and priority actions
 - **AI Answer Simulation:** Generate 8 realistic AI search queries and see if your brand is mentioned
-- **Missing Content Map:** Turn GEO gaps into a page-level content strategy matrix
+- **Multi-Model Visibility Demo:** Show whether major AI answer engines know, recommend, or cite the brand
+- **Missing Content Map:** Turn GEO gaps into a page-level content strategy matrix for homepage, about, comparison, FAQ, blog, and crawlability work
 - **Content Recommendations:** 10 types of GEO-optimized content (FAQ, schema, definitions, meta tags...)
 - **Before / After Experiment Loop:** Run baseline audit, apply content changes, re-run audit, compare delta, and export an experiment report
 - **Markdown Report Export:** Downloadable report with all analysis results
 
 ### P1 — Research Differentiators
 - **Citation Failure Diagnosis:** Diagnose *why* AI engines don't cite your brand (12-type taxonomy, primary failure, evidence, impact, fix)
-- **Brand Name Ambiguity Detection:** Detect naming collisions and recommend canonical entity phrasing
+- **Brand Name Ambiguity Detection:** Detect naming collisions, explain risk, and recommend canonical entity phrasing
 - **Content Strategy Matrix:** Identify missing homepage, about, comparison, FAQ, blog, and crawlability pages
 - **Before / After GEO Diff:** Side-by-side content comparison showing GEO improvement
 - **Strategy Library:** 9 built-in GEO strategies with before/after examples, filterable by dimension
@@ -62,6 +63,86 @@ Traditional SEO measures keyword rankings and organic traffic. But users increas
 - **Prompt Portfolio:** 12 prompts across 6 intent types with funnel stage and demand scoring
 - **Citation Source Map:** 8 source categories analyzed for AI citation coverage gaps
 - **GEO Experiment Tracker:** Create, run, complete experiments tracking baseline → after score deltas
+
+---
+
+## Product Workflow
+
+GEO Lens is now designed as a content strategy workflow, not only a scoring tool:
+
+1. **Run baseline audit:** Score the brand across five GEO dimensions and simulate AI answer questions.
+2. **Explain citation failure:** Use the 12-type citation failure taxonomy and brand-name ambiguity detector to explain why the brand may not be cited.
+3. **Plan missing content:** Convert failures into a page-level matrix covering entity definition, comparison intent, citation evidence, problem discovery, and technical crawlability.
+4. **Apply recommended changes:** Use recommendations, content diffs, and strategy examples to draft the next content update.
+5. **Re-run audit and compare delta:** Track before/after improvements in entity clarity, citation readiness, answer coverage, AI mention rate, and failure count.
+6. **Export report:** Produce a Markdown report with score tables, primary failure, ambiguity risk, content map, and experiment delta.
+
+---
+
+## Strategy Outputs
+
+### Citation Failure Taxonomy
+
+Reports explain the primary failure with evidence, impact, and fix:
+
+```text
+Primary failure:
+AMBIGUOUS_BRAND_NAME
+
+Evidence:
+The homepage does not clearly define whether GEO Lens is a SaaS product, research tool, or developer demo.
+
+Impact:
+AI answer engines may avoid citing the page because the entity boundary is unclear.
+
+Fix:
+Add a 40-word entity definition near the top of the homepage.
+```
+
+### Brand Name Ambiguity
+
+The ambiguity detector flags collision risk for overloaded names:
+
+```text
+Brand: GEO Lens
+
+Possible ambiguity:
+- GEO Lens as Generative Engine Optimization tool
+- GeoLens as geolocation / GIS / image privacy tools
+- LibreGeoLens as QGIS MLLM plugin
+
+Ambiguity risk: High
+
+Reason:
+The name "GeoLens" is already associated with geospatial, GIS, and image privacy projects.
+
+Recommendation:
+Use "GEO Lens" consistently with the expanded phrase "Generative Engine Optimization Lens" in title, H1, README, metadata, and schema.
+```
+
+### Missing Content Map
+
+The content map turns analysis gaps into a strategy matrix:
+
+| GEO need | Existing page | Status | Suggested page |
+|----------|---------------|--------|----------------|
+| entity definition | homepage | weak | improve homepage hero |
+| comparison intent | none | missing | `/compare/[competitor]` |
+| citation evidence | about page | weak | add dated metrics |
+| problem discovery | blog | missing | add use-case article |
+| technical crawlability | sitemap | OK | no action |
+
+### Before / After Experiment Loop
+
+Experiment reports compare measurable deltas after content changes:
+
+| Metric | Before | After | Delta |
+| ------ | -----: | ----: | ----: |
+| Entity Clarity | 58 | 82 | +24 |
+| Citation Readiness | 41 | 73 | +32 |
+| Answer Coverage | 62 | 79 | +17 |
+| AI Mention Rate | 10% | 35% | +25% |
+| Citation Failure Count | 7 | 3 | -4 |
 
 ---
 
@@ -88,14 +169,14 @@ flowchart TB
     user["User / Browser"]
 
     subgraph app["Next.js 16 App Router"]
-        pages["React Pages<br/>Projects, Analysis, Strategy Library, Settings"]
-        api["REST API Routes<br/>/api/projects/*, /api/strategies, /api/health"]
+        pages["React Pages<br/>Projects, Model Visibility, Ambiguity<br/>Content Map, Experiments, Reports"]
+        api["REST API Routes<br/>/api/projects/[id]/*, /api/strategies, /api/health"]
         meta["GEO Metadata Routes<br/>robots.txt, sitemap.xml, llms.txt"]
     end
 
     subgraph services["Server-Side Services"]
         guards["Demo Access + Rate Limit<br/>Session isolation, input limits"]
-        geo["GEO Domain Logic<br/>scoring, ambiguity, readiness, diff, source map, experiments"]
+        geo["GEO Domain Logic<br/>scoring, model visibility, ambiguity<br/>taxonomy, content map, readiness, experiments"]
         prompts["Prompt Builders + Zod Schemas"]
         llm["LLM Client<br/>timeout, JSON validation, fallback"]
         fetcher["safe-fetch<br/>SSRF-protected website checks"]
@@ -255,7 +336,7 @@ src/
 │   └── layout/             # AppShell, demo banner
 ├── lib/                    # Business logic
 │   ├── llm/                # LLM client, schemas, prompts
-│   ├── geo/                # Scoring, strategies, ambiguity, diff, readiness, source-map, experiments
+│   ├── geo/                # Scoring, taxonomy, ambiguity, content-map, model visibility, diff, readiness, experiments
 │   ├── fetch/              # SSRF-safe URL fetching
 │   ├── security/           # Rate limiting
 │   ├── demo/               # Session isolation, cleanup
@@ -265,6 +346,21 @@ src/
 │   └── mock-data.ts        # Stable mock data for demo mode
 └── generated/prisma/       # Generated Prisma client
 ```
+
+---
+
+## Analysis Module Routes
+
+| Module | Page | API | Main Output |
+|--------|------|-----|-------------|
+| GEO Score | `/projects/[id]` | `POST /api/projects/[id]/analyze` | Five-dimension GEO score |
+| AI Questions | `/projects/[id]/questions` | `POST /api/projects/[id]/questions` | Simulated answers and brand mentions |
+| Model Visibility | `/projects/[id]/models` | `POST /api/projects/[id]/models` | Demo knows / recommends / cites matrix |
+| Brand Ambiguity | `/projects/[id]/ambiguity` | `POST /api/projects/[id]/ambiguity` | Ambiguity risk, reason, recommendation |
+| Citation Diagnostics | `/projects/[id]/diagnostics` | `POST /api/projects/[id]/diagnostics` | Primary failure, evidence, impact, fix |
+| Missing Content Map | `/projects/[id]/content-map` | `POST /api/projects/[id]/content-map` | Page-level content strategy matrix |
+| Before / After Experiments | `/projects/[id]/experiments` | `/api/projects/[id]/experiments/*` | Before/after score delta table |
+| Markdown Report | `/projects/[id]/report` | `GET /api/projects/[id]/report` | Full exportable strategy report |
 
 ---
 
@@ -312,7 +408,8 @@ GEO Lens is not just an AI content generator. It implements:
 - A **structured scoring model** for AI citation potential
 - **Citation failure diagnosis** connecting symptoms → root causes → fixes
 - **Brand ambiguity detection** explaining whether the name collides with adjacent entities
-- **Before/after content diff** showing measurable GEO improvement
+- **Missing content mapping** turning audit gaps into a page-level strategy plan
+- **Before/after experiment loop** showing measurable GEO improvement
 - A **strategy library** of reusable optimization patterns
 - **Source map analysis** identifying where AI engines get citation signals
 - Its own `/robots.txt`, `/sitemap.xml`, and `/llms.txt` as GEO best practice
@@ -323,6 +420,7 @@ GEO Lens is not just an AI content generator. It implements:
 
 - Next.js App Router + TypeScript
 - Prisma data model with project/session isolation
+- Rule-based explainability for taxonomy, ambiguity, content maps, and experiment deltas
 - Demo-safe mode with anonymous sessions and expiration
 - SSRF protection for external URL analysis
 - Deployment profiles: Vercel + Neon, Docker Compose + VPS
@@ -350,7 +448,7 @@ GEO Lens is not just an AI content generator. It implements:
 >
 > The tech stack uses Next.js 16 with the App Router, Prisma 7 with PostgreSQL, and an OpenAI-compatible LLM layer that supports DeepSeek. I implemented LLM JSON schema validation with Zod, graceful mock fallbacks, rate limiting, SSRF-safe URL fetching, and anonymous session isolation for the public demo.
 >
-> There are three research-grade features — Citation Failure Diagnosis that maps symptoms to root causes, Before/After GEO Diff showing measurable content improvement, and a Strategy Library encoding 9 reusable optimization patterns. I also included lightweight enterprise features like Technical Audit, Prompt Portfolio, Source Map, and Experiment Tracker.
+> The product goes beyond scoring: Citation Failure Diagnosis maps symptoms to root causes, Brand Ambiguity Detection explains naming collisions, Missing Content Map turns gaps into a page plan, and the Before/After Experiment Loop compares measurable score deltas after changes. I also included lightweight enterprise features like Technical Audit, Prompt Portfolio, Source Map, and Model Visibility.
 >
 > The project deploys two ways: Vercel + Neon for a zero-cost resume demo, and Docker Compose + VPS to demonstrate production engineering skills. It includes CI/CD, health checks, and comprehensive security hardening."
 
@@ -363,8 +461,8 @@ GEO Lens | Generative Engine Optimization Platform
 • Built full-stack SaaS prototype with Next.js 16, TypeScript, Prisma, PostgreSQL
 • Designed five-dimension GEO scoring model quantifying AI citation potential
 • Implemented LLM service layer with Zod schema validation, mock fallback, and rate limiting
-• Created Citation Failure Diagnosis, Before/After Diff, and Strategy Library as research differentiators
-• Added AI Readiness Technical Audit, Prompt Portfolio, Citation Source Map, and Experiment Tracker
+• Created Citation Failure Taxonomy, Brand Ambiguity Detection, Missing Content Map, and Strategy Library
+• Added Model Visibility, AI Readiness Technical Audit, Prompt Portfolio, Citation Source Map, and Experiment Loop
 • Deployed via Vercel + Neon (resume demo) and Docker Compose + VPS (engineering showcase)
 • Implemented demo mode with anonymous session isolation, data expiration, and SSRF protection
 ```

@@ -30,14 +30,15 @@ GEO Lens 是一个面向内容团队和个人品牌的**生成式引擎优化**�
 - **五维 GEO 评分：** 实体清晰度 · 答案覆盖度 · 引用友好度 · 内容结构 · 新鲜度信号
 - **评分仪表盘：** 柱状图展示分数，附优势、劣势和优先级行动清单
 - **AI 问答模拟：** 生成 8 个真实 AI 搜索问题，查看品牌是否被提及
-- **缺失内容地图：** 把 GEO 缺口转成页面级内容策略矩阵
+- **多模型可见性 Demo：** 展示主流 AI 问答引擎是否知道、推荐、引用目标品牌
+- **缺失内容地图：** 把 GEO 缺口转成 homepage、about、comparison、FAQ、blog、crawlability 等页面级策略矩阵
 - **内容优化建议：** 10 类 GEO 优化内容（FAQ、Schema、定义段落、meta 标签等）
 - **优化前后实验闭环：** 跑 baseline audit、应用内容修改、重新审计、对比分数变化并导出实验报告
 - **Markdown 报告导出：** 可下载的完整分析报告
 
 ### P1 — 研究型差异化功能
 - **引用失败诊断：** 诊断品牌*为什么*没被 AI 引用（12 类 taxonomy，输出 primary failure、evidence、impact、fix）
-- **品牌名歧义检测：** 检测命名撞车风险，并建议统一的实体定义表达
+- **品牌名歧义检测：** 检测命名撞车风险，解释风险原因，并建议统一的实体定义表达
 - **内容策略矩阵：** 识别 homepage、about、comparison、FAQ、blog、crawlability 等缺失页面
 - **优化前后对比：** 左右对比内容改动，展示 GEO 提升
 - **策略库：** 9 条内置 GEO 策略，含优化前后示例，可按维度筛选
@@ -47,6 +48,86 @@ GEO Lens 是一个面向内容团队和个人品牌的**生成式引擎优化**�
 - **Prompt 组合：** 12 条 prompts 覆盖 6 种意图类型，含漏斗阶段和需求度评分
 - **引用来源地图：** 8 个来源类别，分析 AI 引用覆盖缺口
 - **GEO 实验追踪器：** 创建、运行、完成实验，追踪基线 → 优化后分数变化
+
+---
+
+## 产品流程
+
+GEO Lens 现在是一个内容策略工作流，而不只是打分工具：
+
+1. **运行基线审计：** 对品牌进行五维 GEO 评分，并模拟 AI 问答场景。
+2. **解释引用失败：** 用 12 类引用失败 taxonomy 和品牌名歧义检测解释为什么品牌可能不被引用。
+3. **规划缺失内容：** 把失败原因转成页面级矩阵，覆盖实体定义、对比意图、引用证据、问题发现和技术可抓取性。
+4. **应用推荐修改：** 结合内容建议、before/after diff 和策略库示例，产出下一轮内容更新。
+5. **重新审计并比较变化：** 跟踪实体清晰度、引用友好度、答案覆盖度、AI 提及率和失败数量的前后变化。
+6. **导出报告：** 输出包含分数表、primary failure、歧义风险、内容地图和实验 delta 的 Markdown 报告。
+
+---
+
+## 策略输出
+
+### 引用失败 Taxonomy
+
+报告会用 evidence、impact、fix 解释 primary failure：
+
+```text
+Primary failure:
+AMBIGUOUS_BRAND_NAME
+
+Evidence:
+The homepage does not clearly define whether GEO Lens is a SaaS product, research tool, or developer demo.
+
+Impact:
+AI answer engines may avoid citing the page because the entity boundary is unclear.
+
+Fix:
+Add a 40-word entity definition near the top of the homepage.
+```
+
+### 品牌名歧义检测
+
+歧义检测会标记撞名风险：
+
+```text
+Brand: GEO Lens
+
+Possible ambiguity:
+- GEO Lens as Generative Engine Optimization tool
+- GeoLens as geolocation / GIS / image privacy tools
+- LibreGeoLens as QGIS MLLM plugin
+
+Ambiguity risk: High
+
+Reason:
+The name "GeoLens" is already associated with geospatial, GIS, and image privacy projects.
+
+Recommendation:
+Use "GEO Lens" consistently with the expanded phrase "Generative Engine Optimization Lens" in title, H1, README, metadata, and schema.
+```
+
+### 缺失内容地图
+
+内容地图把分析缺口转成策略矩阵：
+
+| GEO need | Existing page | Status | Suggested page |
+|----------|---------------|--------|----------------|
+| entity definition | homepage | weak | improve homepage hero |
+| comparison intent | none | missing | `/compare/[competitor]` |
+| citation evidence | about page | weak | add dated metrics |
+| problem discovery | blog | missing | add use-case article |
+| technical crawlability | sitemap | OK | no action |
+
+### 优化前后实验闭环
+
+实验报告会比较内容修改后的可衡量变化：
+
+| Metric | Before | After | Delta |
+| ------ | -----: | ----: | ----: |
+| Entity Clarity | 58 | 82 | +24 |
+| Citation Readiness | 41 | 73 | +32 |
+| Answer Coverage | 62 | 79 | +17 |
+| AI Mention Rate | 10% | 35% | +25% |
+| Citation Failure Count | 7 | 3 | -4 |
 
 ---
 
@@ -73,14 +154,14 @@ flowchart TB
     user["用户 / 浏览器"]
 
     subgraph app["Next.js 16 App Router"]
-        pages["React 页面<br/>项目、分析、策略库、设置"]
-        api["REST API 路由<br/>/api/projects/*, /api/strategies, /api/health"]
+        pages["React 页面<br/>项目、多模型可见性、歧义检测<br/>内容地图、实验、报告"]
+        api["REST API 路由<br/>/api/projects/[id]/*, /api/strategies, /api/health"]
         meta["GEO 元数据路由<br/>robots.txt, sitemap.xml, llms.txt"]
     end
 
     subgraph services["服务端能力"]
         guards["Demo 访问控制 + 限流<br/>会话隔离、输入长度限制"]
-        geo["GEO 领域逻辑<br/>评分、歧义检测、审计、diff、来源地图、实验"]
+        geo["GEO 领域逻辑<br/>评分、多模型可见性、歧义检测<br/>taxonomy、内容地图、审计、实验"]
         prompts["Prompt 构建器 + Zod Schema"]
         llm["LLM 客户端<br/>超时、JSON 校验、兜底"]
         fetcher["safe-fetch<br/>防 SSRF 的站点检查"]
@@ -240,7 +321,7 @@ src/
 │   └── layout/             # AppShell、demo 横幅
 ├── lib/                    # 业务逻辑
 │   ├── llm/                # LLM 客户端、schema、prompts
-│   ├── geo/                # 评分、策略、歧义检测、diff、审计、来源地图、实验
+│   ├── geo/                # 评分、taxonomy、歧义检测、内容地图、多模型可见性、diff、审计、实验
 │   ├── fetch/              # 防 SSRF 安全抓取
 │   ├── security/           # 限流
 │   ├── demo/               # 会话隔离、数据清理
@@ -250,6 +331,21 @@ src/
 │   └── mock-data.ts        # Demo 模式稳定模拟数据
 └── generated/prisma/       # Prisma 生成代码
 ```
+
+---
+
+## 分析模块路由
+
+| 模块 | 页面 | API | 主要输出 |
+|--------|------|-----|-------------|
+| GEO 评分 | `/projects/[id]` | `POST /api/projects/[id]/analyze` | 五维 GEO 分数 |
+| AI 问答 | `/projects/[id]/questions` | `POST /api/projects/[id]/questions` | 模拟回答和品牌提及情况 |
+| 多模型可见性 | `/projects/[id]/models` | `POST /api/projects/[id]/models` | demo 版 knows / recommends / cites 矩阵 |
+| 品牌名歧义 | `/projects/[id]/ambiguity` | `POST /api/projects/[id]/ambiguity` | 歧义风险、原因、建议 |
+| 引用失败诊断 | `/projects/[id]/diagnostics` | `POST /api/projects/[id]/diagnostics` | primary failure、evidence、impact、fix |
+| 缺失内容地图 | `/projects/[id]/content-map` | `POST /api/projects/[id]/content-map` | 页面级内容策略矩阵 |
+| 优化前后实验 | `/projects/[id]/experiments` | `/api/projects/[id]/experiments/*` | before/after 分数变化表 |
+| Markdown 报告 | `/projects/[id]/report` | `GET /api/projects/[id]/report` | 可导出的完整策略报告 |
 
 ---
 
@@ -297,7 +393,8 @@ GEO Lens 不只是 AI 内容生成器。它实现了：
 - **结构化评分模型** 衡量 AI 引用潜力
 - **引用失败诊断** 连接症状 → 根因 → 修复方案
 - **品牌名歧义检测** 解释品牌名是否与相邻实体撞车
-- **优化前后对比** 展示可衡量的 GEO 提升
+- **缺失内容地图** 把审计缺口转成页面级策略计划
+- **优化前后实验闭环** 展示可衡量的 GEO 提升
 - **策略库** 沉淀可复用的优化模式
 - **来源地图分析** 识别 AI 引擎获取引用信号的渠道
 - 自身提供 `/robots.txt`、`/sitemap.xml`、`/llms.txt` 作为 GEO 最佳实践
@@ -308,6 +405,7 @@ GEO Lens 不只是 AI 内容生成器。它实现了：
 
 - **LLM JSON Schema 校验：** 所有 LLM 输出用 Zod 校验；失败时回退到 mock 数据
 - **Mock 兜底系统：** 稳定 mock 数据支持无 API Key 完整演示
+- **规则解释系统：** taxonomy、歧义检测、内容地图和实验 delta 都能输出可解释原因
 - **限流机制：** 内存限流器配合加盐 IP 哈希
 - **双线部署：** Vercel + Neon 用于简历演示；Docker Compose + VPS 体现工程完整性
 - **SSRF 防护：** URL 抓取阻止 localhost、私有 IP、metadata 端点
@@ -336,7 +434,7 @@ GEO Lens 不只是 AI 内容生成器。它实现了：
 >
 > 技术栈使用 Next.js 16 App Router、Prisma 7 + PostgreSQL，以及兼容 OpenAI 的 LLM 调用层，支持 DeepSeek。我实现了 LLM JSON Schema 校验、优雅 mock 兜底、限流、SSRF 安全抓取和匿名会话隔离。
 >
-> 项目包含三个研究型功能——连接症状到根因的引用失败诊断、展示可衡量内容提升的优化前后对比、沉淀 9 条可复用模式的策略库。同时实现了轻量企业级模块：技术审计、Prompt 组合、来源地图和实验追踪。
+> 产品不只停留在打分：引用失败诊断把症状映射到根因，品牌名歧义检测解释命名撞车风险，缺失内容地图把问题转成页面计划，优化前后实验闭环对比修改后的分数变化。同时实现了轻量企业级模块：技术审计、Prompt 组合、来源地图和多模型可见性。
 >
 > 项目支持两条部署路线：Vercel + Neon 用于零成本简历演示，Docker Compose + VPS 用于展示生产工程能力。配有 CI/CD、健康检查和全面的安全加固。"
 
@@ -349,8 +447,8 @@ GEO Lens | 生成式引擎优化分析平台
 • 使用 Next.js 16、TypeScript、Prisma、PostgreSQL 构建全栈 SaaS 原型
 • 设计五维 GEO 评分模型，量化 AI 引用潜力
 • 实现 LLM 服务层，含 Zod schema 校验、mock 兜底和限流
-• 创建引用失败诊断、优化前后对比和策略库作为研究型差异化功能
-• 增加 AI 就绪技术审计、Prompt 组合、引用来源地图和实验追踪
+• 创建引用失败 taxonomy、品牌名歧义检测、缺失内容地图和策略库
+• 增加多模型可见性、AI 就绪技术审计、Prompt 组合、引用来源地图和实验闭环
 • 通过 Vercel + Neon（简历演示）和 Docker Compose + VPS（工程展示）双线部署
 • 实现 demo 模式，含匿名会话隔离、数据过期清理和 SSRF 防护
 ```
