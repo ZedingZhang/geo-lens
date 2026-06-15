@@ -7,6 +7,12 @@ import {
   buildMissingContentMap,
   formatContentMapStatus,
 } from "@/lib/geo/missing-content-map";
+import {
+  buildExperimentMetricRows,
+  formatExperimentDelta,
+  formatExperimentMetricValue,
+  parseExperimentNotes,
+} from "@/lib/geo/experiment-loop";
 
 interface ProjectForReport {
   name: string;
@@ -83,6 +89,7 @@ interface ProjectForReport {
     baselineScore: number | null;
     afterScore: number | null;
     delta: number | null;
+    notes?: string | null;
   }>;
 }
 
@@ -292,8 +299,26 @@ ${project.sourceMaps
 
 ${project.experiments
   .map(
-    (e) =>
-      `- **${e.name}** — ${e.status} | Baseline: ${e.baselineScore ?? "—"} | After: ${e.afterScore ?? "—"} | Delta: ${e.delta ?? "—"}`
+    (e) => {
+      const loop = parseExperimentNotes(e.notes).experimentLoop;
+      const rows = buildExperimentMetricRows(loop);
+      const matrix = rows.some((row) => row.before !== null || row.after !== null)
+        ? `
+
+| Metric | Before | After | Delta |
+| ------ | -----: | ----: | ----: |
+${rows
+  .map(
+    (row) =>
+      `| ${row.metric} | ${formatExperimentMetricValue(row.before, row.format)} | ${formatExperimentMetricValue(row.after, row.format)} | ${formatExperimentDelta(row.delta, row.format)} |`
+  )
+  .join("\n")}
+`
+        : "";
+
+      return `### ${e.name}
+**Status:** ${e.status} | **Baseline:** ${e.baselineScore ?? "—"} | **After:** ${e.afterScore ?? "—"} | **Delta:** ${e.delta ?? "—"}${matrix}`;
+    }
   )
   .join("\n")}`);
   }

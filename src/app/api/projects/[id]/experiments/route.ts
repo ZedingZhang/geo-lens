@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { parseJsonField } from "@/lib/utils";
-import { computeDelta } from "@/lib/geo/experiments";
+import {
+  parseExperimentNotes,
+  serializeExperimentNotes,
+} from "@/lib/geo/experiment-loop";
 import { enforceRateLimit } from "@/lib/security/rate-limit";
 import { assertProjectAccess, assertProjectWriteAccess } from "@/lib/demo/access";
 import { z } from "zod";
@@ -44,7 +47,10 @@ export async function POST(
         status: "planned",
         baselineScore: parsed.data.baselineScore || null,
         impactedDimensions: JSON.stringify(parsed.data.impactedDimensions || []),
-        notes: parsed.data.notes || null,
+        notes: serializeExperimentNotes({
+          ...parseExperimentNotes(parsed.data.notes || null),
+          userNotes: parsed.data.notes || null,
+        }),
       },
     });
 

@@ -1,9 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { computeDelta } from "@/lib/geo/experiments";
+import {
+  buildCurrentAuditSnapshot,
+  buildProjectedAfterSnapshot,
+  defaultAppliedChanges,
+  parseExperimentNotes,
+  serializeExperimentNotes,
+} from "@/lib/geo/experiment-loop";
 import { z } from "zod";
 
 const updateExperimentSchema = z.object({
+  action: z.enum(["baseline", "apply", "rerun"]).optional(),
   status: z.enum(["planned", "running", "completed", "archived"]).optional(),
   afterScore: z.number().int().min(0).max(100).optional(),
   notes: z.string().max(1000).optional(),
@@ -34,6 +42,73 @@ export async function PATCH(
     }
 
     const updateData: Record<string, unknown> = {};
+    const envelope = parseExperimentNotes(existing.notes);
+
+    if (parsed.data.action === "baseline") {
+      const [analysis, questions, diagnoses] = await Promise.all([
+        prisma.analysis.findFirst({
+          where: { projectId: id },
+          orderBy: { createdAt: "desc" },
+        }),
+        prisma.simulatedQuestion.findMany({
+          where: { projectId: id },
+          orderBy: { createdAt: "desc" },
+          take: 8,
+        }),
+        prisma.citationFailure.findMany({
+          where: { projectId: id },
+          orderBy: { createdAt: "desc" },
+          take: 12,
+        }),
+      ]);
+      const baseline = buildCurrentAuditSnapshot({
+        analysis,
+        questions,
+        diagnoses,
+      });
+      envelope.experimentLoop.baseline = baseline;
+      envelope.experimentLoop.after = undefined;
+      envelope.experimentLoop.rerunAt = undefined;
+      updateData.baselineScore = baseline.totalScore;
+      updateData.afterScore = null;
+      updateData.delta = null;
+      updateData.status = "running";
+      updateData.notes = serializeExperimentNotes(envelope);
+    }
+
+    if (parsed.data.action === "apply") {
+      envelope.experimentLoop.appliedChanges =
+        envelope.experimentLoop.appliedChanges.length > 0
+          ? envelope.experimentLoop.appliedChanges
+          : defaultAppliedChanges();
+      envelope.experimentLoop.appliedAt = new Date().toISOString();
+      updateData.status = "running";
+      updateData.notes = serializeExperimentNotes(envelope);
+    }
+
+    if (parsed.data.action === "rerun") {
+      const baseline =
+        envelope.experimentLoop.baseline ||
+        buildCurrentAuditSnapshot({
+          analysis: null,
+          questions: [],
+          diagnoses: [],
+        });
+      const after = buildProjectedAfterSnapshot(baseline);
+      envelope.experimentLoop.baseline = baseline;
+      envelope.experimentLoop.after = after;
+      envelope.experimentLoop.appliedChanges =
+        envelope.experimentLoop.appliedChanges.length > 0
+          ? envelope.experimentLoop.appliedChanges
+          : defaultAppliedChanges();
+      envelope.experimentLoop.rerunAt = new Date().toISOString();
+      updateData.afterScore = after.totalScore;
+      updateData.delta = computeDelta(baseline.totalScore, after.totalScore);
+      updateData.status = "completed";
+      updateData.completedAt = new Date();
+      updateData.notes = serializeExperimentNotes(envelope);
+    }
+
     if (parsed.data.status) {
       updateData.status = parsed.data.status;
       if (parsed.data.status === "completed") {
@@ -48,7 +123,8 @@ export async function PATCH(
       );
     }
     if (parsed.data.notes !== undefined) {
-      updateData.notes = parsed.data.notes;
+      envelope.userNotes = parsed.data.notes || null;
+      updateData.notes = serializeExperimentNotes(envelope);
     }
 
     const experiment = await prisma.geoExperiment.update({
@@ -108,6 +184,7 @@ export async function GET(
 
     return NextResponse.json({ experiment });
   } catch (error) {
+    console.error("Failed to get experiment:", error instanceof Error ? error.name : "unknown");
     return NextResponse.json(
       { error: "Failed to get experiment" },
       { status: 500 }

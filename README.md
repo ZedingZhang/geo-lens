@@ -47,6 +47,7 @@ Traditional SEO measures keyword rankings and organic traffic. But users increas
 - **AI Answer Simulation:** Generate 8 realistic AI search queries and see if your brand is mentioned
 - **Missing Content Map:** Turn GEO gaps into a page-level content strategy matrix
 - **Content Recommendations:** 10 types of GEO-optimized content (FAQ, schema, definitions, meta tags...)
+- **Before / After Experiment Loop:** Run baseline audit, apply content changes, re-run audit, compare delta, and export an experiment report
 - **Markdown Report Export:** Downloadable report with all analysis results
 
 ### P1 — Research Differentiators
