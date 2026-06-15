@@ -16,6 +16,7 @@ import {
   Map,
   FlaskConical,
   BookOpen,
+  Bot,
   Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -40,6 +41,7 @@ const navigation = [
 const projectNav = [
   { href: "", label: "GEO Score", icon: Sparkles },
   { href: "/questions", label: "AI Questions", icon: MessageSquareText },
+  { href: "/models", label: "Model Visibility", icon: Bot },
   {
     href: "/recommendations",
     label: "Recommendations",

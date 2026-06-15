@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, use } from "react";
+import type { ElementType } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -16,6 +17,7 @@ import {
   FlaskConical,
   FileDown,
   ArrowRight,
+  Bot,
 } from "lucide-react";
 import { parseJsonField } from "@/lib/utils";
 import { GEO_DIMENSIONS, scoreToColor } from "@/lib/geo/scoring";
@@ -56,8 +58,25 @@ type ProjectData = {
   };
 };
 
-const subModules = [
+type SubModuleCount =
+  | "questions"
+  | "recommendations"
+  | "diagnoses"
+  | "contentDiffs"
+  | "readinessAudits"
+  | "promptItems"
+  | "sourceMaps"
+  | "experiments";
+
+const subModules: Array<{
+  href: string;
+  label: string;
+  icon: ElementType;
+  count?: SubModuleCount;
+  badge?: string;
+}> = [
   { href: "questions", label: "AI Questions", icon: MessageSquareText, count: "questions" as const },
+  { href: "models", label: "Model Visibility", icon: Bot, badge: "Demo scan" },
   { href: "recommendations", label: "Recommendations", icon: FileText, count: "recommendations" as const },
   { href: "diagnostics", label: "Citation Diagnostics", icon: Stethoscope, count: "diagnoses" as const },
   { href: "diff", label: "Before/After Diff", icon: GitCompare, count: "contentDiffs" as const },
@@ -275,7 +294,7 @@ export default function ProjectDashboard({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-8">
         {subModules.map((mod) => {
           const Icon = mod.icon;
-          const count = project[mod.count]?.length ?? 0;
+          const count = mod.count ? project[mod.count]?.length ?? 0 : 0;
           return (
             <Link
               key={mod.href}
@@ -287,7 +306,11 @@ export default function ProjectDashboard({
                 <div>
                   <div className="text-sm font-medium">{mod.label}</div>
                   <div className="text-xs text-[var(--muted-foreground)]">
-                    {count > 0 ? `${count} item${count !== 1 ? "s" : ""}` : "Not run yet"}
+                    {mod.badge
+                      ? mod.badge
+                      : count > 0
+                        ? `${count} item${count !== 1 ? "s" : ""}`
+                        : "Not run yet"}
                   </div>
                 </div>
               </div>
