@@ -20,6 +20,7 @@ GEO Lens is a generative engine optimization (GEO) analysis platform designed fo
 ## Features
 - Five-dimension GEO scoring (Entity Clarity, Answer Coverage, Citation Readiness, Content Structure, Freshness Signal)
 - AI answer simulation and citation failure diagnosis
+- Brand name ambiguity detection
 - Before/After GEO content diff
 - AI Readiness Technical Audit
 - Prompt Portfolio management

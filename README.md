@@ -52,6 +52,7 @@ Traditional SEO measures keyword rankings and organic traffic. But users increas
 
 ### P1 — Research Differentiators
 - **Citation Failure Diagnosis:** Diagnose *why* AI engines don't cite your brand (12-type taxonomy, primary failure, evidence, impact, fix)
+- **Brand Name Ambiguity Detection:** Detect naming collisions and recommend canonical entity phrasing
 - **Content Strategy Matrix:** Identify missing homepage, about, comparison, FAQ, blog, and crawlability pages
 - **Before / After GEO Diff:** Side-by-side content comparison showing GEO improvement
 - **Strategy Library:** 9 built-in GEO strategies with before/after examples, filterable by dimension
@@ -94,7 +95,7 @@ flowchart TB
 
     subgraph services["Server-Side Services"]
         guards["Demo Access + Rate Limit<br/>Session isolation, input limits"]
-        geo["GEO Domain Logic<br/>scoring, readiness, diff, source map, experiments"]
+        geo["GEO Domain Logic<br/>scoring, ambiguity, readiness, diff, source map, experiments"]
         prompts["Prompt Builders + Zod Schemas"]
         llm["LLM Client<br/>timeout, JSON validation, fallback"]
         fetcher["safe-fetch<br/>SSRF-protected website checks"]
@@ -254,7 +255,7 @@ src/
 │   └── layout/             # AppShell, demo banner
 ├── lib/                    # Business logic
 │   ├── llm/                # LLM client, schemas, prompts
-│   ├── geo/                # Scoring, strategies, diff, readiness, source-map, experiments
+│   ├── geo/                # Scoring, strategies, ambiguity, diff, readiness, source-map, experiments
 │   ├── fetch/              # SSRF-safe URL fetching
 │   ├── security/           # Rate limiting
 │   ├── demo/               # Session isolation, cleanup
@@ -310,6 +311,7 @@ src/
 GEO Lens is not just an AI content generator. It implements:
 - A **structured scoring model** for AI citation potential
 - **Citation failure diagnosis** connecting symptoms → root causes → fixes
+- **Brand ambiguity detection** explaining whether the name collides with adjacent entities
 - **Before/after content diff** showing measurable GEO improvement
 - A **strategy library** of reusable optimization patterns
 - **Source map analysis** identifying where AI engines get citation signals

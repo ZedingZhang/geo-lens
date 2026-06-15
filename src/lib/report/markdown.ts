@@ -13,6 +13,7 @@ import {
   formatExperimentMetricValue,
   parseExperimentNotes,
 } from "@/lib/geo/experiment-loop";
+import { buildBrandAmbiguityResult } from "@/lib/geo/brand-ambiguity";
 
 interface ProjectForReport {
   name: string;
@@ -98,6 +99,14 @@ export function generateMarkdownReport(project: ProjectForReport): string {
   const strengths = analysis ? parseJsonField<string[]>(analysis.strengths, []) : [];
   const weaknesses = analysis ? parseJsonField<string[]>(analysis.weaknesses, []) : [];
   const nextActions = analysis ? parseJsonField<string[]>(analysis.nextActions, []) : [];
+  const brandAmbiguity = buildBrandAmbiguityResult({
+    brandName: project.brandName,
+    websiteUrl: project.websiteUrl,
+    description: project.description,
+    product: project.product,
+    keywords: project.keywords,
+    competitors: project.competitors,
+  });
 
   const sections: string[] = [];
 
@@ -135,6 +144,23 @@ ${weaknesses.map((w) => `- ${w}`).join("\n")}
 ${nextActions.map((a, i) => `${i + 1}. ${a}`).join("\n")}
 `);
   }
+
+  // Brand Ambiguity
+  sections.push(`## Brand Name Ambiguity
+
+Brand: ${brandAmbiguity.brandName}
+
+Possible ambiguity:
+${brandAmbiguity.possibleAmbiguities.map((item) => `- ${item}`).join("\n")}
+
+Ambiguity risk: ${brandAmbiguity.ambiguityRisk}
+
+Reason:
+${brandAmbiguity.reason}
+
+Recommendation:
+${brandAmbiguity.recommendation}
+`);
 
   // Questions
   if (project.questions.length > 0) {

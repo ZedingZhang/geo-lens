@@ -37,6 +37,7 @@ GEO Lens 是一个面向内容团队和个人品牌的**生成式引擎优化**�
 
 ### P1 — 研究型差异化功能
 - **引用失败诊断：** 诊断品牌*为什么*没被 AI 引用（12 类 taxonomy，输出 primary failure、evidence、impact、fix）
+- **品牌名歧义检测：** 检测命名撞车风险，并建议统一的实体定义表达
 - **内容策略矩阵：** 识别 homepage、about、comparison、FAQ、blog、crawlability 等缺失页面
 - **优化前后对比：** 左右对比内容改动，展示 GEO 提升
 - **策略库：** 9 条内置 GEO 策略，含优化前后示例，可按维度筛选
@@ -79,7 +80,7 @@ flowchart TB
 
     subgraph services["服务端能力"]
         guards["Demo 访问控制 + 限流<br/>会话隔离、输入长度限制"]
-        geo["GEO 领域逻辑<br/>评分、审计、diff、来源地图、实验"]
+        geo["GEO 领域逻辑<br/>评分、歧义检测、审计、diff、来源地图、实验"]
         prompts["Prompt 构建器 + Zod Schema"]
         llm["LLM 客户端<br/>超时、JSON 校验、兜底"]
         fetcher["safe-fetch<br/>防 SSRF 的站点检查"]
@@ -239,7 +240,7 @@ src/
 │   └── layout/             # AppShell、demo 横幅
 ├── lib/                    # 业务逻辑
 │   ├── llm/                # LLM 客户端、schema、prompts
-│   ├── geo/                # 评分、策略、diff、审计、来源地图、实验
+│   ├── geo/                # 评分、策略、歧义检测、diff、审计、来源地图、实验
 │   ├── fetch/              # 防 SSRF 安全抓取
 │   ├── security/           # 限流
 │   ├── demo/               # 会话隔离、数据清理
@@ -295,6 +296,7 @@ src/
 GEO Lens 不只是 AI 内容生成器。它实现了：
 - **结构化评分模型** 衡量 AI 引用潜力
 - **引用失败诊断** 连接症状 → 根因 → 修复方案
+- **品牌名歧义检测** 解释品牌名是否与相邻实体撞车
 - **优化前后对比** 展示可衡量的 GEO 提升
 - **策略库** 沉淀可复用的优化模式
 - **来源地图分析** 识别 AI 引擎获取引用信号的渠道
