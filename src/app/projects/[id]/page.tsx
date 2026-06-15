@@ -18,6 +18,7 @@ import {
   FileDown,
   ArrowRight,
   Bot,
+  FileSearch,
 } from "lucide-react";
 import { parseJsonField } from "@/lib/utils";
 import { GEO_DIMENSIONS, scoreToColor } from "@/lib/geo/scoring";
@@ -77,6 +78,7 @@ const subModules: Array<{
 }> = [
   { href: "questions", label: "AI Questions", icon: MessageSquareText, count: "questions" as const },
   { href: "models", label: "Model Visibility", icon: Bot, badge: "Demo scan" },
+  { href: "content-map", label: "Missing Content Map", icon: FileSearch, badge: "Strategy matrix" },
   { href: "recommendations", label: "Recommendations", icon: FileText, count: "recommendations" as const },
   { href: "diagnostics", label: "Citation Diagnostics", icon: Stethoscope, count: "diagnoses" as const },
   { href: "diff", label: "Before/After Diff", icon: GitCompare, count: "contentDiffs" as const },

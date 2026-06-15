@@ -45,11 +45,13 @@ Traditional SEO measures keyword rankings and organic traffic. But users increas
 - **Five-Dimension GEO Scoring:** Entity Clarity · Answer Coverage · Citation Readiness · Content Structure · Freshness Signal
 - **Score Dashboard:** Radar/bar charts with strengths, weaknesses, and priority actions
 - **AI Answer Simulation:** Generate 8 realistic AI search queries and see if your brand is mentioned
+- **Missing Content Map:** Turn GEO gaps into a page-level content strategy matrix
 - **Content Recommendations:** 10 types of GEO-optimized content (FAQ, schema, definitions, meta tags...)
 - **Markdown Report Export:** Downloadable report with all analysis results
 
 ### P1 — Research Differentiators
 - **Citation Failure Diagnosis:** Diagnose *why* AI engines don't cite your brand (12-type taxonomy, primary failure, evidence, impact, fix)
+- **Content Strategy Matrix:** Identify missing homepage, about, comparison, FAQ, blog, and crawlability pages
 - **Before / After GEO Diff:** Side-by-side content comparison showing GEO improvement
 - **Strategy Library:** 9 built-in GEO strategies with before/after examples, filterable by dimension
 

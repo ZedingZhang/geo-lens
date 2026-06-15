@@ -3,12 +3,19 @@ import {
   getCitationFailureLabel,
   selectPrimaryCitationFailure,
 } from "@/lib/geo/citation-failure-taxonomy";
+import {
+  buildMissingContentMap,
+  formatContentMapStatus,
+} from "@/lib/geo/missing-content-map";
 
 interface ProjectForReport {
   name: string;
   brandName: string;
   websiteUrl?: string | null;
   description?: string;
+  product?: string;
+  keywords?: string;
+  competitors?: string | null;
   analyses: Array<{
     totalScore: number;
     entityClarity: number;
@@ -172,6 +179,45 @@ ${project.diagnoses
   )
   .join("\n")}`);
   }
+
+  // Missing Content Map
+  const contentMap = buildMissingContentMap({
+    brandName: project.brandName,
+    websiteUrl: project.websiteUrl,
+    description: project.description,
+    product: project.product,
+    keywords: project.keywords,
+    competitors: project.competitors,
+    scores: analysis
+      ? {
+          entityClarity: analysis.entityClarity,
+          answerCoverage: analysis.answerCoverage,
+          citationReadiness: analysis.citationReadiness,
+          contentStructure: analysis.contentStructure,
+          freshnessSignal: analysis.freshnessSignal,
+        }
+      : null,
+    diagnoses: project.diagnoses,
+    readinessChecks: project.readinessAudits[0]
+      ? parseJsonField<Array<{ key: string; label: string; status: string }>>(
+          project.readinessAudits[0].checks,
+          []
+        )
+      : [],
+    questions: project.questions,
+  });
+
+  sections.push(`## Missing Content Map
+
+| GEO need | Existing page | Status | Suggested page |
+|----------|---------------|--------|----------------|
+${contentMap.rows
+  .map(
+    (row) =>
+      `| ${row.geoNeed} | ${row.existingPage} | ${formatContentMapStatus(row.status)} | ${row.suggestedPage} |`
+  )
+  .join("\n")}
+`);
 
   // Recommendations
   if (project.recommendations.length > 0) {
